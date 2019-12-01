@@ -17,7 +17,10 @@ sumTotalFuelMass = getSum . foldMap Sum . fuelAwareMassValues
     fuelAwareMassValues = concatMap (takeWhile (> 0) . iterate evalMass . evalMass . read)
 
 solutionDay1Part1 :: IO Integer
-solutionDay1Part1 = sumFuelMass . lines <$> readFile "./resources/input.txt"
+solutionDay1Part1 = sumFuelMass <$> readLines
 
 solutionDay1Part2 :: IO Integer
-solutionDay1Part2 = sumTotalFuelMass . lines <$> readFile "./resources/input.txt"
+solutionDay1Part2 = sumTotalFuelMass <$> readLines
+
+readLines :: IO [String]
+readLines = lines <$> readFile "./resources/input.txt"
