@@ -5,19 +5,19 @@ module Day1
 
 import           Data.Monoid (Sum (..))
 
-sumFuel :: [String] -> Integer
-sumFuel = getSum . foldMap (Sum . computeModelFuel)
-  where
-    computeModelFuel = subtract 2 . (`div` 3) . read
+evalMass :: Integer -> Integer
+evalMass = subtract 2 . (`div` 3)
 
-sumTotalFuel :: [String] -> Integer
-sumTotalFuel = getSum . foldMap Sum . computeModelTotalFuel
+sumFuelMass :: [String] -> Integer
+sumFuelMass = getSum . foldMap (Sum . evalMass . read)
+
+sumTotalFuelMass :: [String] -> Integer
+sumTotalFuelMass = getSum . foldMap Sum . fuelAwareMassValues
   where
-    computeModelTotalFuel = concatMap (takeWhile (> 0) . iterate evaluateMass . evaluateMass . read)
-    evaluateMass = subtract 2 . (`div` 3)
+    fuelAwareMassValues = concatMap (takeWhile (> 0) . iterate evalMass . evalMass . read)
 
 solutionDay1Part1 :: IO Integer
-solutionDay1Part1 = sumFuel . lines <$> readFile "./resources/input.txt"
+solutionDay1Part1 = sumFuelMass . lines <$> readFile "./resources/input.txt"
 
 solutionDay1Part2 :: IO Integer
-solutionDay1Part2 = sumTotalFuel . lines <$> readFile "./resources/input.txt"
+solutionDay1Part2 = sumTotalFuelMass . lines <$> readFile "./resources/input.txt"
