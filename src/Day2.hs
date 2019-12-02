@@ -4,13 +4,18 @@ module Day2
   ) where
 
 import           Data.Char                    (isDigit)
+import           Data.Foldable                (foldr')
 import           Data.Maybe                   (listToMaybe)
 import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, sepBy, skipSpaces)
+
+append :: [Int] -> [Int] -> [Int]
+append = flip (foldr' (:))
 
 replaceAt :: Int -> [Int] -> [Int] -> [Int]
 replaceAt pos values list =
   let (upper, lower) = splitAt pos list
-   in concat [upper, values, drop (length values) lower]
+      suffix = drop (length values) lower
+   in upper `append` (values `append` suffix)
 
 elemAt :: [Int] -> Int -> Maybe Int
 elemAt list = listToMaybe . flip drop list
