@@ -1,6 +1,6 @@
 module Day1
-  ( solutionDay1Part1
-  , solutionDay1Part2
+  ( solutionPart1
+  , solutionPart2
   ) where
 
 import           Data.Monoid (Sum (..))
@@ -19,8 +19,8 @@ sumTotalFuelMass = getSum . foldMap Sum . fuelAwareMassValues
 readLines :: IO [String]
 readLines = lines <$> readFile "./resources/input-day1.txt"
 
-solutionDay1Part1 :: IO Integer
-solutionDay1Part1 = sumFuelMass <$> readLines
+solutionPart1 :: IO Integer
+solutionPart1 = sumFuelMass <$> readLines
 
-solutionDay1Part2 :: IO Integer
-solutionDay1Part2 = sumTotalFuelMass <$> readLines
+solutionPart2 :: IO Integer
+solutionPart2 = sumTotalFuelMass <$> readLines

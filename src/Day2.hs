@@ -1,6 +1,6 @@
 module Day2
-  ( solutionDay2Part1
-  , solutionDay2Part2
+  ( solutionPart1
+  , solutionPart2
   ) where
 
 import           Data.Char                    (isDigit)
@@ -57,12 +57,12 @@ parseInput = concatMap fst . readP_to_S inputParser
 readInput :: IO [Int]
 readInput = parseInput <$> readFile "./resources/input-day2.txt"
 
-solutionDay2Part1 :: IO (Maybe Int)
-solutionDay2Part1 = do
+solutionPart1 :: IO (Maybe Int)
+solutionPart1 = do
   list <- runIntCodeProgram <$> readInput
   return $ list >>= listToMaybe
 
-solutionDay2Part2 :: IO (Maybe Int)
-solutionDay2Part2 = do
+solutionPart2 :: IO (Maybe Int)
+solutionPart2 = do
   inputPair <- findInputPairFor 19690720 <$> readInput
   return $ computeNounVerbChecksum <$> inputPair
