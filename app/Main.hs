@@ -1,10 +1,11 @@
 module Main where
 
 import           Day1
+import           Day2
 
 main :: IO ()
 main = do
-  part1 <- solutionDay1Part1
-  print part1
-  part2 <- solutionDay1Part2
-  print part2
+  solutionDay1Part1 >>= print
+  solutionDay1Part2 >>= print
+  solutionDay2Part1 >>= print
+  solutionDay2Part2 >>= print
