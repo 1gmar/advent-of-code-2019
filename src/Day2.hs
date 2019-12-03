@@ -29,12 +29,16 @@ runIndexedIntCodeProgram index list
   | 99 `elem` list `elemAt` index = Just list
   | otherwise = processIntCode $ drop index list
   where
-    processIntCode []                               = Nothing
-    processIntCode (1:leftIdx:rightIdx:targetIdx:_) = computeValueAt targetIdx leftIdx (+) rightIdx
-    processIntCode (2:leftIdx:rightIdx:targetIdx:_) = computeValueAt targetIdx leftIdx (*) rightIdx
-    computeValueAt targetIdx leftIdx op rightIdx = do
+    processIntCode []                                = Nothing
+    processIntCode (op:leftIdx:rightIdx:targetIdx:_) = operator op >>= computeValueAt targetIdx leftIdx rightIdx
+    computeValueAt targetIdx leftIdx rightIdx op = do
       newValue <- op <$> list `elemAt` leftIdx <*> list `elemAt` rightIdx
       runIndexedIntCodeProgram (index + 4) $ replaceAt targetIdx [newValue] list
+
+operator :: Int -> Maybe (Int -> Int -> Int)
+operator 1 = Just (+)
+operator 2 = Just (*)
+operator _ = Nothing
 
 findInputPairFor :: Int -> [Int] -> Maybe (Int, Int)
 findInputPairFor result input =
