@@ -64,4 +64,4 @@ solutionPart1 :: IO (Maybe Int)
 solutionPart1 = runIntCodeProgram <$> readInput
 
 solutionPart2 :: IO (Maybe Int)
-solutionPart2 = (computeNounVerbChecksum <$>) . findInputPairFor 19690720 <$> readInput
+solutionPart2 = fmap computeNounVerbChecksum . findInputPairFor 19690720 <$> readInput
