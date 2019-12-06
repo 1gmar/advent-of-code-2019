@@ -20,13 +20,13 @@ replaceAt pos values list =
 elemAt :: [Int] -> Int -> Maybe Int
 elemAt list = listToMaybe . flip drop list
 
-runIntCodeProgram :: [Int] -> Maybe [Int]
+runIntCodeProgram :: [Int] -> Maybe Int
 runIntCodeProgram []   = Nothing
 runIntCodeProgram list = runIndexedIntCodeProgram 0 list
 
-runIndexedIntCodeProgram :: Int -> [Int] -> Maybe [Int]
+runIndexedIntCodeProgram :: Int -> [Int] -> Maybe Int
 runIndexedIntCodeProgram index list
-  | 99 `elem` list `elemAt` index = Just list
+  | 99 `elem` list `elemAt` index = listToMaybe list
   | otherwise = processIntCode $ drop index list
   where
     processIntCode []                                = Nothing
@@ -44,8 +44,7 @@ findInputPairFor :: Int -> [Int] -> Maybe (Int, Int)
 findInputPairFor result input =
   listToMaybe [(noun, verb) | noun <- [0 .. 99], verb <- [0 .. 99], result `elem` computeOutputFor noun verb]
   where
-    computeOutputFor noun verb = runIntCodeProgram (inputSampleFor noun verb) >>= listToMaybe
-    inputSampleFor noun verb = replaceAt 1 [noun, verb] input
+    computeOutputFor noun verb = runIntCodeProgram $ replaceAt 1 [noun, verb] input
 
 computeNounVerbChecksum :: (Int, Int) -> Int
 computeNounVerbChecksum (noun, verb) = 100 * noun + verb
@@ -62,11 +61,7 @@ readInput :: IO [Int]
 readInput = parseInput <$> readFile "./resources/input-day2.txt"
 
 solutionPart1 :: IO (Maybe Int)
-solutionPart1 = do
-  list <- runIntCodeProgram <$> readInput
-  return $ list >>= listToMaybe
+solutionPart1 = runIntCodeProgram <$> readInput
 
 solutionPart2 :: IO (Maybe Int)
-solutionPart2 = do
-  inputPair <- findInputPairFor 19690720 <$> readInput
-  return $ computeNounVerbChecksum <$> inputPair
+solutionPart2 = (computeNounVerbChecksum <$>) . findInputPairFor 19690720 <$> readInput
