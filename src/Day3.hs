@@ -15,12 +15,12 @@ data SegmentType
 data Segment
   = VSegment
       { x      :: Int
-      , yRange :: (Int, Int)
+      , yRange :: Range
       , vSteps :: Int
       }
   | HSegment
       { y      :: Int
-      , xRange :: (Int, Int)
+      , xRange :: Range
       , hSteps :: Int
       }
 
@@ -28,9 +28,11 @@ type Line = [Segment]
 
 type Point = (Int, Int)
 
+type Range = (Int, Int)
+
 type StepsCache = [(Point, Int)]
 
-inRange :: Int -> (Int, Int) -> Bool
+inRange :: Int -> Range -> Bool
 inRange x (lower, upper)
   | lower < upper = lower <= x && x <= upper
   | otherwise = upper <= x && x <= lower
@@ -40,34 +42,20 @@ intersects VSegment {..} HSegment {..} = y `inRange` yRange && x `inRange` xRang
 intersects HSegment {..} VSegment {..} = y `inRange` yRange && x `inRange` xRange
 intersects _ _                         = False
 
-intersections :: Segment -> Line -> Line
-intersections segment = filter (segment `intersects`)
+manhattanDistance :: Segment -> Segment -> Int
+manhattanDistance VSegment {..} HSegment {..} = abs x + abs y
+manhattanDistance HSegment {..} VSegment {..} = abs x + abs y
+manhattanDistance _ _                         = 0
 
-manhattanD :: Segment -> Segment -> Int
-manhattanD VSegment {..} HSegment {..} = abs x + abs y
-manhattanD HSegment {..} VSegment {..} = abs x + abs y
-manhattanD _ _                         = 0
+stepDistance :: Segment -> Segment -> Int
+stepDistance VSegment {..} HSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
+stepDistance HSegment {..} VSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
+stepDistance _ _                         = 0
 
-evaluateSteps :: Segment -> Segment -> Int
-evaluateSteps VSegment {..} HSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
-evaluateSteps HSegment {..} VSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
-evaluateSteps _ _                         = 0
-
-minCost :: (Line -> Segment -> [Int] -> [Int]) -> Line -> Line -> Int
-minCost reducer line = minimum . filter (/= 0) . foldr (reducer line) []
-
-distanceReducer :: Line -> Segment -> [Int] -> [Int]
-distanceReducer line segment acc = (manhattanD segment <$> intersections segment line) ++ acc
-
-stepsReducer :: Line -> Segment -> [Int] -> [Int]
-stepsReducer line segment acc = (evaluateSteps segment <$> intersections segment line) ++ acc
-
-inputParser :: ReadP [String]
-inputParser = skipSpaces *> commaSeparatedSegments <* skipSpaces <* eof
+minDistance :: (Segment -> Segment -> Int) -> Line -> Line -> Int
+minDistance combineSeg line = minimum . filter (/= 0) . foldr collect []
   where
-    commaSeparatedSegments = sepBy segment (char ',')
-    directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
-    segment = directionLetter >>= \letter -> (letter :) <$> munch isDigit
+    collect segment acc = (combineSeg segment <$> filter (segment `intersects`) line) ++ acc
 
 parseLine :: [String] -> Line
 parseLine = collectSegments (0, 0) [] 0
@@ -77,16 +65,16 @@ collectSegments _ _ _ [] = []
 collectSegments point cache steps ([]:rest) = collectSegments point cache steps rest
 collectSegments point cache stepCount input@((direction:range):_) =
   case lookup nPoint cache of
-    Just s  -> collectSegmentsWith point nPoint cache s segType input
-    Nothing -> collectSegmentsWith point nPoint ((nPoint, steps) : cache) steps segType input
+    Just s  -> buildSegmentFor point nPoint cache s segType input
+    Nothing -> buildSegmentFor point nPoint ((nPoint, steps) : cache) steps segType input
   where
     distance = read range
     steps = stepCount + distance
     (nPoint, segType) = nextPoint direction point distance
 
-collectSegmentsWith :: Point -> Point -> StepsCache -> Int -> SegmentType -> [String] -> Line
-collectSegmentsWith _ _ _ _ _ [] = []
-collectSegmentsWith (x0, y0) (x, y) cache steps segType (_:rest) =
+buildSegmentFor :: Point -> Point -> StepsCache -> Int -> SegmentType -> [String] -> Line
+buildSegmentFor _ _ _ _ _ [] = []
+buildSegmentFor (x0, y0) (x, y) cache steps segType (_:rest) =
   case segType of
     Vertical   -> VSegment x (y0, y) steps : collectSegments (x, y) cache steps rest
     Horizontal -> HSegment y (x0, x) steps : collectSegments (x, y) cache steps rest
@@ -100,6 +88,13 @@ nextPoint direction (x, y) distance =
     'R' -> ((x + distance, y), Horizontal)
     _   -> ((0, 0), Horizontal)
 
+inputParser :: ReadP [String]
+inputParser = skipSpaces *> commaSeparatedSegments <* skipSpaces <* eof
+  where
+    commaSeparatedSegments = sepBy segment (char ',')
+    segment = directionLetter >>= \letter -> (letter :) <$> munch isDigit
+    directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
+
 parseInput :: String -> Line
 parseInput = parseLine . concatMap fst . readP_to_S inputParser
 
@@ -109,9 +104,9 @@ readLines = filter (not . null) . lines <$> readFile "./resources/input-day3.txt
 solutionPart1 :: IO Int
 solutionPart1 = do
   (line1:line2:_) <- fmap parseInput <$> readLines
-  return $ minCost distanceReducer line1 line2
+  return $ minDistance manhattanDistance line1 line2
 
 solutionPart2 :: IO Int
 solutionPart2 = do
   (line1:line2:_) <- fmap parseInput <$> readLines
-  return $ minCost stepsReducer line1 line2
+  return $ minDistance stepDistance line1 line2
