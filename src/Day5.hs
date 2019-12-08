@@ -19,12 +19,6 @@ data Operation
   | JumpIf Predicate
   | Test Assertion
 
-data ParamData =
-  ParamData
-    { mode  :: ParamMode
-    , param :: Int
-    }
-
 data ProgramState =
   ProgramState
     { iPointer :: Int
