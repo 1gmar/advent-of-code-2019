@@ -81,15 +81,14 @@ runInstruction state instr@Instruction {..} =
     Arithmetic op    -> computeValue state instr op
 
 programWith :: Int -> Int -> [String] -> [String]
-programWith = flip replaceAt . pure . show
+programWith = flip replaceAt . show
 
-replaceAt :: Int -> [a] -> [a] -> [a]
-replaceAt pos values list =
+replaceAt :: Int -> String -> [String] -> [String]
+replaceAt pos value list =
   let (upper, lower) = splitAt pos list
-      suffix = drop (length values) lower
-   in upper ++ values ++ suffix
+   in upper ++ value : drop 1 lower
 
-elemAt :: [a] -> Int -> Either String a
+elemAt :: [String] -> Int -> Either String String
 elemAt list index
   | 0 <= index && index < length list = Right $ list !! index
   | otherwise = Left $ "Index out of bounds: " ++ show index
