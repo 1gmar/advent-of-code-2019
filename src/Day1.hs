@@ -3,21 +3,19 @@ module Day1
   , solutionPart2
   ) where
 
-import           Data.Monoid (Sum (..))
-
 evalMass :: Integer -> Integer
 evalMass = subtract 2 . (`div` 3)
 
-sumFuelMass :: [String] -> Integer
-sumFuelMass = getSum . foldMap (Sum . evalMass . read)
+sumFuelMass :: [Integer] -> Integer
+sumFuelMass = sum . map evalMass
 
-sumTotalFuelMass :: [String] -> Integer
-sumTotalFuelMass = getSum . foldMap Sum . fuelAwareMassValues
+sumTotalFuelMass :: [Integer] -> Integer
+sumTotalFuelMass = sum . fuelAwareMassValues
   where
-    fuelAwareMassValues = concatMap (takeWhile (> 0) . iterate evalMass . evalMass . read)
+    fuelAwareMassValues = concatMap (takeWhile (> 0) . iterate evalMass . evalMass)
 
-readLines :: IO [String]
-readLines = lines <$> readFile "./resources/input-day1.txt"
+readLines :: IO [Integer]
+readLines = map read . lines <$> readFile "./resources/input-day1.txt"
 
 solutionPart1 :: IO Integer
 solutionPart1 = sumFuelMass <$> readLines
