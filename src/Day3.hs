@@ -38,19 +38,19 @@ inRange x (lower, upper)
   | otherwise = upper <= x && x <= lower
 
 intersects :: Segment -> Segment -> Bool
-intersects VSegment {..} HSegment {..} = y `inRange` yRange && x `inRange` xRange
-intersects HSegment {..} VSegment {..} = y `inRange` yRange && x `inRange` xRange
-intersects _ _                         = False
+intersects HSegment {..} VSegment {..}       = y `inRange` yRange && x `inRange` xRange
+intersects vs@VSegment {..} hs@HSegment {..} = intersects hs vs
+intersects _ _                               = False
 
 manhattanDistance :: Segment -> Segment -> Int
-manhattanDistance VSegment {..} HSegment {..} = abs x + abs y
-manhattanDistance HSegment {..} VSegment {..} = abs x + abs y
-manhattanDistance _ _                         = 0
+manhattanDistance HSegment {..} VSegment {..}       = abs x + abs y
+manhattanDistance vs@VSegment {..} hs@HSegment {..} = manhattanDistance hs vs
+manhattanDistance _ _                               = 0
 
 stepDistance :: Segment -> Segment -> Int
-stepDistance VSegment {..} HSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
-stepDistance HSegment {..} VSegment {..} = vSteps + hSteps - abs (snd xRange - x) - abs (snd yRange - y)
-stepDistance _ _                         = 0
+stepDistance (HSegment y (_, x1) hSteps) (VSegment x (_, y1) vSteps) = vSteps + hSteps - abs (x1 - x) - abs (y1 - y)
+stepDistance vs@VSegment {..} hs@HSegment {..}                       = stepDistance hs vs
+stepDistance _ _                                                     = 0
 
 minDistance :: (Segment -> Segment -> Int) -> Line -> Line -> Int
 minDistance combineSeg line = minimum . filter (/= 0) . foldr collect []
