@@ -1,5 +1,6 @@
 .stack-work/
 .vscode/
+out/
 advent-of-code.cabal
 *~
 *.lock

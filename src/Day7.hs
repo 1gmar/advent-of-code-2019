@@ -199,18 +199,18 @@ runIntCodeProgram state@ProgramState {..}
       | any (`elem` "1278") instr = buildInstruction instr (take 3 args) >>= runInstruction state
       | otherwise = Left $ "Invalid instruction : " ++ show instr
 
-runAmplifierChain :: [String] -> [Int] -> ProgramOutput
-runAmplifierChain initProg = foldM chainResult (ProgramState 0 [] [] 0 False)
+runSimpleChain :: [String] -> [Int] -> ProgramOutput
+runSimpleChain initProg = foldM chainResult (ProgramState 0 [] [] 0 False)
   where
     chainResult ProgramState {..} phase = runIntCodeProgram $ ProgramState 0 [phase, result] initProg 0 False
 
 findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [String] -> ProgramOutput
 findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner
   where
-    compareStates (ProgramState _ _ _ res1 _) (ProgramState _ _ _ res2 _) = compare res1 res2
+    compareStates (ProgramState _ _ _ res1 _) (ProgramState _ _ _ res2 _) = res1 `compare` res2
 
-runAmplifierChainLoopMode :: [String] -> [Int] -> ProgramOutput
-runAmplifierChainLoopMode initProg phaseSetting = loopOver amplifiers
+runLoopModeChain :: [String] -> [Int] -> ProgramOutput
+runLoopModeChain initProg phaseSetting = loopOver amplifiers
   where
     amplifiers = zipWith buildAmplifier ['A' .. 'E'] phaseSetting
     buildAmplifier label phase = Amplifier label $ ProgramState 0 [phase] initProg 0 False
@@ -248,8 +248,8 @@ showProgramOutput (Right state) = show $ result state
 
 solutionPart1 :: IO ()
 solutionPart1 =
-  readInput >>= putStrLn . showProgramOutput . findMaxPossibleSignal runAmplifierChain (permutations [0 .. 4])
+  readInput >>= putStrLn . showProgramOutput . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4])
 
 solutionPart2 :: IO ()
 solutionPart2 =
-  readInput >>= putStrLn . showProgramOutput . findMaxPossibleSignal runAmplifierChainLoopMode (permutations [5 .. 9])
+  readInput >>= putStrLn . showProgramOutput . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9])
