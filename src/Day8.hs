@@ -27,13 +27,13 @@ layerLength = width * height
 countPixel :: Pixel -> Layer -> Int
 countPixel pixel = length . filter (== pixel)
 
-layerWithMin0s :: Image -> Layer
-layerWithMin0s = minimumBy compareLayers
+layerWithMinWhite :: Image -> Layer
+layerWithMinWhite = minimumBy compareLayers
   where
     compareLayers lhs rhs = countPixel White lhs `compare` countPixel White rhs
 
-onesTimesTwos :: Layer -> Int
-onesTimesTwos layer = countPixel Black layer * countPixel Transparent layer
+blackTimesTransparent :: Layer -> Int
+blackTimesTransparent layer = countPixel Black layer * countPixel Transparent layer
 
 zipImageLayers :: Image -> Layer
 zipImageLayers = foldl zipLayers (repeat Transparent)
@@ -74,7 +74,7 @@ readInput :: IO Image
 readInput = readImage . parseInput <$> readFile "./resources/input-day8.txt"
 
 solutionPart1 :: IO Int
-solutionPart1 = onesTimesTwos . layerWithMin0s <$> readInput
+solutionPart1 = blackTimesTransparent . layerWithMinWhite <$> readInput
 
 solutionPart2 :: IO ()
 solutionPart2 = readInput >>= writeFile "./out/output-day8.txt" . showLayer . zipImageLayers
