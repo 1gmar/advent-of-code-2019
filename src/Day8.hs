@@ -1,6 +1,9 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Day8 where
+module Day8
+  ( solutionPart1
+  , solutionPart2
+  ) where
 
 import           Data.List                    (minimumBy)
 import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, many, readP_to_S, skipSpaces)
