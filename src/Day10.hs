@@ -35,9 +35,9 @@ inSightFor asteroidMap reference@(rx, ry) target@(tx, ty)
   | (rx > tx) && (ry <= ty) = not . any (`elem` asteroidMap) $ traverseWith (>) (<=) (+) (-)
   | otherwise = not . any (`elem` asteroidMap) $ traverseWith (>) (>) (+) (+)
   where
-    traverseWith xCmp yCmp xOp yOp = takeWhile (notRef xCmp yCmp) $ iterate (moveP xOp yOp) (moveP xOp yOp target)
+    traverseWith xCmp yCmp xOp yOp = takeWhile (notRef xCmp yCmp) $ iterate (advance xOp yOp) (advance xOp yOp target)
     notRef xCmp yCmp (x, y) = rx `xCmp` x && ry `yCmp` y
-    moveP xOp yOp (x, y) = (x `xOp` dx, y `yOp` dy)
+    advance xOp yOp (x, y) = (x `xOp` dx, y `yOp` dy)
     (dx, dy) = positionDeltaFor reference target
 
 detectAsteroidsFrom :: AsteroidMap -> Position -> (Position, Int)
