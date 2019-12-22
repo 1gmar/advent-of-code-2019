@@ -3,61 +3,45 @@ module Day2
   , solutionPart2
   ) where
 
-import           Data.Char                    (isDigit)
-import           Data.Maybe                   (listToMaybe)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, sepBy, skipSpaces)
+import           IntCodeProgram
 
-replaceAt :: Int -> [Int] -> [Int] -> [Int]
+replaceAt :: Int -> [String] -> [String] -> [String]
 replaceAt pos values list =
   let (upper, lower) = splitAt pos list
       suffix = drop (length values) lower
    in upper ++ values ++ suffix
 
-elemAt :: [Int] -> Int -> Maybe Int
-elemAt list = listToMaybe . flip drop list
-
-runIntCodeProgram :: [Int] -> Maybe Int
-runIntCodeProgram []   = Nothing
-runIntCodeProgram list = runIndexedIntCodeProgram 0 list
-
-runIndexedIntCodeProgram :: Int -> [Int] -> Maybe Int
-runIndexedIntCodeProgram index list
-  | 99 `elem` list `elemAt` index = listToMaybe list
-  | otherwise = processIntCode $ drop index list
+runGravityAssistProgram :: [String] -> Either String Int
+runGravityAssistProgram [] = Left "Program is missing!"
+runGravityAssistProgram prog =
+  case afterRunProgram of
+    Right (res:_) -> Right $ read res
+    Left err      -> Left err
+    _             -> Left "Illegal program state!"
   where
-    processIntCode []                                = Nothing
-    processIntCode (op:leftIdx:rightIdx:targetIdx:_) = operator op >>= computeValueAt targetIdx leftIdx rightIdx
-    computeValueAt targetIdx leftIdx rightIdx op = do
-      newValue <- op <$> list `elemAt` leftIdx <*> list `elemAt` rightIdx
-      runIndexedIntCodeProgram (index + 4) $ replaceAt targetIdx [newValue] list
+    afterRunProgram = program <$> runIntCodeProgram (ProgramState 0 [] prog 0 0 False False)
 
-operator :: Int -> Maybe (Int -> Int -> Int)
-operator 1 = Just (+)
-operator 2 = Just (*)
-operator _ = Nothing
-
-findInputPairFor :: Int -> [Int] -> Maybe (Int, Int)
-findInputPairFor result input =
-  listToMaybe [(noun, verb) | noun <- [0 .. 99], verb <- [0 .. 99], result `elem` computeOutputFor noun verb]
+findInputPairFor :: Int -> [String] -> Either String (Int, Int)
+findInputPairFor output prog =
+  case nounVerbPairs of
+    []     -> Left $ "Could not find pair for: " ++ show output
+    pair:_ -> Right pair
   where
-    computeOutputFor noun verb = runIntCodeProgram $ replaceAt 1 [noun, verb] input
+    nounVerbPairs = [(noun, verb) | noun <- [0 .. 99], verb <- [0 .. 99], output `elem` computeOutputFor noun verb]
+    computeOutputFor noun verb = runGravityAssistProgram $ replaceAt 1 [show noun, show verb] prog
 
-computeNounVerbChecksum :: (Int, Int) -> Int
-computeNounVerbChecksum (noun, verb) = 100 * noun + verb
+nounVerbChecksum :: (Int, Int) -> Int
+nounVerbChecksum (noun, verb) = 100 * noun + verb
 
-inputParser :: ReadP [Int]
-inputParser = map read <$> commaSeparatedDigits <* eof
-  where
-    commaSeparatedDigits = skipSpaces *> munch isDigit `sepBy` char ',' <* skipSpaces
+showResult :: Either String Int -> String
+showResult (Left err)  = "Error: " ++ err
+showResult (Right res) = show res
 
-parseInput :: String -> [Int]
-parseInput = concatMap fst . readP_to_S inputParser
+inputFile :: String
+inputFile = "./resources/input-day2.txt"
 
-readInput :: IO [Int]
-readInput = parseInput <$> readFile "./resources/input-day2.txt"
+solutionPart1 :: IO ()
+solutionPart1 = readInputData inputFile >>= putStrLn . showResult . runGravityAssistProgram
 
-solutionPart1 :: IO (Maybe Int)
-solutionPart1 = runIntCodeProgram <$> readInput
-
-solutionPart2 :: IO (Maybe Int)
-solutionPart2 = fmap computeNounVerbChecksum . findInputPairFor 19690720 <$> readInput
+solutionPart2 :: IO ()
+solutionPart2 = readInputData inputFile >>= putStrLn . showResult . fmap nounVerbChecksum . findInputPairFor 19690720
