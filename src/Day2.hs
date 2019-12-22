@@ -48,7 +48,7 @@ computeNounVerbChecksum (noun, verb) = 100 * noun + verb
 inputParser :: ReadP [Int]
 inputParser = map read <$> commaSeparatedDigits <* eof
   where
-    commaSeparatedDigits = skipSpaces *> sepBy (munch isDigit) (char ',') <* skipSpaces
+    commaSeparatedDigits = skipSpaces *> munch isDigit `sepBy` char ',' <* skipSpaces
 
 parseInput :: String -> [Int]
 parseInput = concatMap fst . readP_to_S inputParser

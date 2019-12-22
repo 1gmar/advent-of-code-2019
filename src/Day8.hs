@@ -1,5 +1,3 @@
-{-# LANGUAGE UnicodeSyntax #-}
-
 module Day8
   ( solutionPart1
   , solutionPart2

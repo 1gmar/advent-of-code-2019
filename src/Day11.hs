@@ -1,11 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Day9
+module Day11
   ( solutionPart1
   , solutionPart2
   ) where
 
 import           Data.Char                    (digitToInt, isDigit)
+import           Data.List                    (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
 import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, sepBy, skipSpaces, (+++))
 
 data ParamMode
@@ -26,14 +27,44 @@ data ProgramState =
     { iPointer     :: Int
     , input        :: [Int]
     , program      :: [String]
-    , result       :: [String]
+    , result       :: Int
     , relativeBase :: Int
+    , halted       :: Bool
     }
 
 data Instruction =
   Instruction
     { operation :: Operation
     , params    :: [Parameter]
+    }
+
+data Direction
+  = LEFT
+  | RIGHT
+  | UP
+  | DOWN
+  deriving (Enum)
+
+data Color
+  = Black
+  | White
+  deriving (Enum, Eq)
+
+data Panel =
+  Panel
+    { position :: Position
+    , color    :: Color
+    }
+
+instance Eq Panel where
+  (Panel pos1 _) == (Panel pos2 _) = pos1 == pos2
+
+data Robot =
+  Robot
+    { panel     :: Panel
+    , direction :: Direction
+    , software  :: ProgramState
+    , grid      :: PanelGrid
     }
 
 type ProgramOutput = Either String ProgramState
@@ -45,6 +76,10 @@ type Operator = Int -> Int -> Int
 type Assertion = Int -> Int -> Bool
 
 type Predicate = Int -> Bool
+
+type Position = (Int, Int)
+
+type PanelGrid = [Panel]
 
 toParamMode :: Int -> Either String ParamMode
 toParamMode mode =
@@ -113,9 +148,12 @@ writeTo :: Parameter -> Int -> Int
 writeTo (Relative, resultP) relBase = resultP + relBase
 writeTo (_, resultP) _              = resultP
 
-readInputSequence :: ProgramState -> Instruction -> ProgramOutput
-readInputSequence ProgramState {..} (Instruction _ []) = illegalProgramState iPointer program
-readInputSequence state@ProgramState {..} (Instruction op (param:_)) =
+endOfProgram :: [String] -> Int -> Bool
+endOfProgram program iPointer = "99" `elem` (fst <$> program `elemAt` iPointer)
+
+readInput :: ProgramState -> Instruction -> ProgramOutput
+readInput ProgramState {..} (Instruction _ []) = illegalProgramState iPointer program
+readInput state@ProgramState {..} (Instruction op (param:_)) =
   case input of
     value:rest -> runIntCodeProgram $ nextState value rest
     _          -> Left "Missing program input data."
@@ -124,16 +162,15 @@ readInputSequence state@ProgramState {..} (Instruction op (param:_)) =
     resultP = writeTo param relativeBase
     nextState value rest = state {iPointer = nextP, input = rest, program = programWith value resultP program}
 
-outputTestResult :: ProgramState -> Instruction -> ProgramOutput
-outputTestResult state@ProgramState {..} instr@Instruction {..} =
+writeOutput :: ProgramState -> Instruction -> ProgramOutput
+writeOutput state@ProgramState {..} instr@Instruction {..} =
   case instr of
-    Instruction _ (param:_) -> withParam param >>= logTest
+    Instruction _ (param:_) -> withParam param >>= Right . nextState
     _                       -> illegalProgramState iPointer program
   where
     nextP = nextIPointer operation iPointer
     withParam param = paramOf param state
-    logTest (value, prog) = runIntCodeProgram $ nextState value prog
-    nextState value prog = state {iPointer = nextP, result = result ++ [show value], program = prog}
+    nextState (value, prog) = state {iPointer = nextP, result = value, program = prog, halted = endOfProgram prog nextP}
 
 jumpToPointerIf :: ProgramState -> Instruction -> Predicate -> ProgramOutput
 jumpToPointerIf state@ProgramState {..} instr@Instruction {..} predicate =
@@ -190,8 +227,8 @@ illegalProgramState iPointer program = Left $ "Illegal program state at: " ++ sh
 runInstruction :: ProgramState -> Instruction -> ProgramOutput
 runInstruction state instr@Instruction {..} =
   case operation of
-    Input            -> readInputSequence state instr
-    Output           -> outputTestResult state instr
+    Input            -> readInput state instr
+    Output           -> writeOutput state instr
     JumpIf predicate -> jumpToPointerIf state instr predicate
     Test assert      -> testAssertion state instr assert
     Arithmetic op    -> computeValue state instr op
@@ -218,7 +255,7 @@ buildInstruction instrCode args =
 
 runIntCodeProgram :: ProgramState -> ProgramOutput
 runIntCodeProgram state@ProgramState {..}
-  | "99" `elem` (fst <$> program `elemAt` iPointer) = Right state
+  | endOfProgram program iPointer = Right state {halted = True}
   | otherwise = processInstruction $ drop iPointer program
   where
     processInstruction [] = Left "Program reached end of input!"
@@ -228,9 +265,84 @@ runIntCodeProgram state@ProgramState {..}
       | any (`elem` "1278") instr = buildInstruction instr (take 3 args) >>= runInstruction state
       | otherwise = Left $ "Invalid instruction : " ++ show instr
 
-runDiagnosticProgram :: [Int] -> [String] -> ProgramOutput
-runDiagnosticProgram _ []          = Left "Program is empty."
-runDiagnosticProgram input program = runIntCodeProgram $ ProgramState 0 input program [] 0
+currentColor :: Robot -> Color
+currentColor Robot {..} =
+  case find (== panel) grid of
+    Just (Panel _ color) -> color
+    Nothing              -> Black
+
+paintCurrentPanel :: Robot -> Color -> Robot
+paintCurrentPanel robot@Robot {..} newColor =
+  case find (== panel) grid of
+    Just pan -> robot {grid = (pan {color = newColor}) : (grid \\ [pan])}
+    Nothing  -> robot {grid = Panel (position panel) newColor : grid}
+
+rotateRobot :: Robot -> Direction -> Robot
+rotateRobot robot@Robot {..} newDirection =
+  case (newDirection, direction) of
+    (LEFT, DOWN)  -> robot {direction = RIGHT}
+    (LEFT, RIGHT) -> robot {direction = UP}
+    (LEFT, UP)    -> robot {direction = LEFT}
+    (RIGHT, DOWN) -> robot {direction = LEFT}
+    (RIGHT, LEFT) -> robot {direction = UP}
+    (RIGHT, UP)   -> robot {direction = RIGHT}
+    _             -> robot {direction = DOWN}
+
+moveRobot :: Robot -> Robot
+moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
+  case dir of
+    LEFT  -> robot {panel = pan {position = (x - 1, y)}}
+    RIGHT -> robot {panel = pan {position = (x + 1, y)}}
+    UP    -> robot {panel = pan {position = (x, y - 1)}}
+    DOWN  -> robot {panel = pan {position = (x, y + 1)}}
+
+paintShip :: Robot -> Either String Robot
+paintShip robot@Robot {..} =
+  case robot of
+    Robot _ _ (ProgramState _ _ _ _ _ True) _ -> Right robot
+    Robot _ _ state _ -> do
+      let color = fromEnum $ currentColor robot
+      stateWithColor <- runIntCodeProgram state {input = [color, color]}
+      stateWithDirection <- runIntCodeProgram stateWithColor
+      let brushRobot = paintCurrentPanel robot $ toEnum (result stateWithColor)
+      let rotatedRobot = rotateRobot brushRobot $ toEnum (result stateWithDirection)
+      paintShip $ (moveRobot rotatedRobot) {software = stateWithDirection}
+
+runPaintingRobot :: Color -> [String] -> Either String Robot
+runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
+  where
+    soft = ProgramState 0 [] prog 0 0 False
+    pan = Panel (0, 0) startColor
+
+countPaintedPanels :: Robot -> Int
+countPaintedPanels Robot {..} = length grid
+
+showPanel :: Panel -> Char
+showPanel Panel {..} =
+  case color of
+    Black -> '⬜'
+    White -> '⬛'
+
+fillGridLine :: (Int, Int) -> PanelGrid -> PanelGrid
+fillGridLine (lower, upper) ~line@(Panel (_, y) _:_) = sortOn (fst . position) fullLine
+  where
+    fullLine = unionBy xCoordinate line fillerLine
+    fillerLine = map (`Panel` Black) $ [lower .. upper] `zip` repeat y
+    xCoordinate (Panel (x1, _) _) (Panel (x2, _) _) = x1 == x2
+
+showRegistrationNumber :: Robot -> String
+showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines
+  where
+    xs = map (fst . position) grid
+    [minX, maxX] = map (\f -> f xs) [minimum, maximum]
+    gridLines = groupBy yCoordinate $ sortOn (snd . position) grid
+    fullGridLines = fillGridLine (minX, maxX) <$> gridLines
+    yCoordinate (Panel (_, y1) _) (Panel (_, y2) _) = y1 == y2
+    showPanels gridRow rows = map showPanel gridRow : rows
+
+writeResult :: Either String String -> IO ()
+writeResult (Left err)     = putStrLn err
+writeResult (Right panels) = writeFile "./out/output-day11.txt" panels
 
 inputParser :: ReadP [String]
 inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof
@@ -243,15 +355,15 @@ inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof
 parseInput :: String -> [String]
 parseInput = concatMap fst . readP_to_S inputParser
 
-readInput :: IO [String]
-readInput = parseInput <$> readFile "./resources/input-day9.txt"
+readInputData :: IO [String]
+readInputData = parseInput <$> readFile "./resources/input-day11.txt"
 
-showProgramOutput :: ProgramOutput -> String
-showProgramOutput (Left err)    = "Error: " ++ err
-showProgramOutput (Right state) = unlines $ result state
+showCount :: Either String Int -> String
+showCount (Left err)  = "Error: " ++ err
+showCount (Right res) = show res
 
-solutionPart1 :: IO ()
-solutionPart1 = readInput >>= putStr . showProgramOutput . runDiagnosticProgram [1]
+solutionPart1 :: IO String
+solutionPart1 = showCount . fmap countPaintedPanels . runPaintingRobot Black <$> readInputData
 
 solutionPart2 :: IO ()
-solutionPart2 = readInput >>= putStr . showProgramOutput . runDiagnosticProgram [2]
+solutionPart2 = readInputData >>= writeResult . fmap showRegistrationNumber . runPaintingRobot White

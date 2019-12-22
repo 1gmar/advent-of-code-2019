@@ -91,7 +91,7 @@ nextPoint direction (x, y) distance =
 inputParser :: ReadP [String]
 inputParser = skipSpaces *> commaSeparatedSegments <* skipSpaces <* eof
   where
-    commaSeparatedSegments = sepBy segment (char ',')
+    commaSeparatedSegments = segment `sepBy` char ','
     segment = directionLetter >>= \letter -> (letter :) <$> munch isDigit
     directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
 

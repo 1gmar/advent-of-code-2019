@@ -72,7 +72,7 @@ allLaserRotations reference asteroidMap = rotation ++ allLaserRotations referenc
     rotation = (sortClockWise reference . findVaporizedAsteroidsFrom reference) asteroidMap
 
 inputParser :: ReadP [Row]
-inputParser = sepBy rows endOfLine <* eof
+inputParser = rows `sepBy` endOfLine <* eof
   where
     endOfLine = satisfy isControl
     rows = many cell

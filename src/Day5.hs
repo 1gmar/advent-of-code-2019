@@ -187,7 +187,7 @@ illegalProgramState iPointer program = Left $ "Illegal program state at: " ++ sh
 inputParser :: ReadP [String]
 inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof
   where
-    commaSeparatedIntegers = sepBy integer (char ',')
+    commaSeparatedIntegers = integer `sepBy` char ','
     integer = positive +++ negative
     positive = munch isDigit
     negative = char '-' >>= \sign -> (sign :) <$> positive
