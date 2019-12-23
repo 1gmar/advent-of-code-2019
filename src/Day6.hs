@@ -3,8 +3,8 @@ module Day6
   , solutionPart2
   ) where
 
-import           Data.Char                    (isAsciiUpper, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, skipSpaces)
+import           Data.Char                    (isAsciiUpper, isControl, isDigit)
+import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, satisfy, sepBy, skipSpaces)
 
 data OrbitTree =
   SpaceObject String [OrbitTree]
@@ -64,17 +64,19 @@ minOrbitalTransfers (you, santa) orbitTree = countTransfersFor routeToYou + coun
 toTransfers :: SpaceRoute -> [OrbitalTransfer]
 toTransfers route = route `zip` tail route
 
-inputParser :: ReadP (String, String)
-inputParser = skipSpaces *> parenSeparatedStrings <* skipSpaces <* eof
+inputParser :: ReadP OrbitMap
+inputParser = skipSpaces *> line `sepBy` endOfLine <* skipSpaces <* eof
   where
-    parenSeparatedStrings = (,) <$> munch alphaNumUpper <* char ')' <*> munch alphaNumUpper
+    endOfLine = satisfy isControl
+    line = (,) <$> object <* char ')' <*> object
+    object = munch alphaNumUpper
     alphaNumUpper c = isAsciiUpper c || isDigit c
 
 parseInput :: String -> OrbitMap
-parseInput = map fst . readP_to_S inputParser
+parseInput = concatMap fst . readP_to_S inputParser
 
 readInput :: IO OrbitMap
-readInput = concatMap parseInput . lines <$> readFile "./resources/input-day6.txt"
+readInput = parseInput <$> readFile "./resources/input-day6.txt"
 
 solutionPart1 :: IO Int
 solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" <$> readInput

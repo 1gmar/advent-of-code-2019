@@ -5,7 +5,7 @@ module Day10
 
 import           Data.Char                    (isControl)
 import           Data.List                    (maximumBy, sortBy, (\\))
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, many, readP_to_S, satisfy, sepBy)
+import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, many1, readP_to_S, satisfy, sepBy, skipSpaces)
 
 data Cell
   = Empty
@@ -72,10 +72,10 @@ allLaserRotations reference asteroidMap = rotation ++ allLaserRotations referenc
     rotation = (sortClockWise reference . findVaporizedAsteroidsFrom reference) asteroidMap
 
 inputParser :: ReadP [Row]
-inputParser = rows `sepBy` endOfLine <* eof
+inputParser = skipSpaces *> rows `sepBy` endOfLine <* skipSpaces <* eof
   where
     endOfLine = satisfy isControl
-    rows = many cell
+    rows = many1 cell
     cell = readCell <$> choice [char '#', char '.']
     readCell '#' = Asteroid
     readCell _   = Empty

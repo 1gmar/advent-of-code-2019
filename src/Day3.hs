@@ -5,8 +5,9 @@ module Day3
   , solutionPart2
   ) where
 
-import           Data.Char                    (isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, munch, readP_to_S, sepBy, skipSpaces)
+import           Data.Char                    (isControl, isDigit)
+import           Text.ParserCombinators.ReadP (ReadP, char, choice, count, eof, munch, readP_to_S, satisfy, sepBy,
+                                               skipSpaces)
 
 data SegmentType
   = Vertical
@@ -32,6 +33,10 @@ type Range = (Int, Int)
 
 type StepsCache = [(Point, Int)]
 
+type SegmentFolder = Segment -> Segment -> Int
+
+type FoldState = (Line, (Point, StepsCache, Int))
+
 inRange :: Int -> Range -> Bool
 inRange x (lower, upper)
   | lower < upper = lower <= x && x <= upper
@@ -52,32 +57,30 @@ stepDistance (HSegment y (_, x1) hSteps) (VSegment x (_, y1) vSteps) = vSteps + 
 stepDistance vs@VSegment {..} hs@HSegment {..}                       = stepDistance hs vs
 stepDistance _ _                                                     = 0
 
-minDistance :: (Segment -> Segment -> Int) -> Line -> Line -> Int
-minDistance combineSeg line = minimum . filter (/= 0) . foldr collect []
+minDistance :: SegmentFolder -> (Line, Line) -> Int
+minDistance foldSeg (line1, line2) = (minimum . filter (/= 0) . foldr collect []) line2
   where
-    collect segment acc = (combineSeg segment <$> filter (segment `intersects`) line) ++ acc
+    collect segment acc = (foldSeg segment <$> filter (segment `intersects`) line1) ++ acc
 
 parseLine :: [String] -> Line
-parseLine = collectSegments (0, 0) [] 0
+parseLine = fst . foldl collectSegments ([], ((0, 0), [], 0))
 
-collectSegments :: Point -> StepsCache -> Int -> [String] -> Line
-collectSegments _ _ _ [] = []
-collectSegments point cache steps ([]:rest) = collectSegments point cache steps rest
-collectSegments point cache stepCount input@((direction:range):_) =
+collectSegments :: FoldState -> String -> FoldState
+collectSegments (line, (point, cache, stepCount)) ~(direction:range) =
   case lookup nPoint cache of
-    Just s  -> buildSegmentFor point nPoint cache s segType input
-    Nothing -> buildSegmentFor point nPoint ((nPoint, steps) : cache) steps segType input
+    Just s  -> (nextSegment s : line, (nPoint, cache, s))
+    Nothing -> (nextSegment steps : line, (nPoint, (nPoint, steps) : cache, steps))
   where
     distance = read range
     steps = stepCount + distance
     (nPoint, segType) = nextPoint direction point distance
+    nextSegment = buildSegmentFor point nPoint segType
 
-buildSegmentFor :: Point -> Point -> StepsCache -> Int -> SegmentType -> [String] -> Line
-buildSegmentFor _ _ _ _ _ [] = []
-buildSegmentFor (x0, y0) (x, y) cache steps segType (_:rest) =
+buildSegmentFor :: Point -> Point -> SegmentType -> Int -> Segment
+buildSegmentFor (x0, y0) (x, y) segType steps =
   case segType of
-    Vertical   -> VSegment x (y0, y) steps : collectSegments (x, y) cache steps rest
-    Horizontal -> HSegment y (x0, x) steps : collectSegments (x, y) cache steps rest
+    Vertical   -> VSegment x (y0, y) steps
+    Horizontal -> HSegment y (x0, x) steps
 
 nextPoint :: Char -> Point -> Int -> (Point, SegmentType)
 nextPoint direction (x, y) distance =
@@ -85,28 +88,30 @@ nextPoint direction (x, y) distance =
     'U' -> ((x, y + distance), Vertical)
     'D' -> ((x, y - distance), Vertical)
     'L' -> ((x - distance, y), Horizontal)
-    'R' -> ((x + distance, y), Horizontal)
-    _   -> ((0, 0), Horizontal)
+    _   -> ((x + distance, y), Horizontal)
 
-inputParser :: ReadP [String]
-inputParser = skipSpaces *> commaSeparatedSegments <* skipSpaces <* eof
+inputParser :: ReadP [Line]
+inputParser = skipSpaces *> count 2 (line <* endOfLine) <* skipSpaces <* eof
   where
-    commaSeparatedSegments = segment `sepBy` char ','
+    endOfLine = satisfy isControl
+    line = parseLine <$> segment `sepBy` char ','
     segment = directionLetter >>= \letter -> (letter :) <$> munch isDigit
     directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
 
-parseInput :: String -> Line
-parseInput = parseLine . concatMap fst . readP_to_S inputParser
+parseInput :: String -> [Line]
+parseInput = concatMap fst . readP_to_S inputParser
 
-readLines :: IO [String]
-readLines = filter (not . null) . lines <$> readFile "./resources/input-day3.txt"
+readInput :: IO [Line]
+readInput = parseInput <$> readFile "./resources/input-day3.txt"
 
-solutionPart1 :: IO Int
-solutionPart1 = do
-  (line1:line2:_) <- fmap parseInput <$> readLines
-  return $ minDistance manhattanDistance line1 line2
+linesToTuple :: [Line] -> Maybe (Line, Line)
+linesToTuple input =
+  case input of
+    [line1, line2] -> Just (line1, line2)
+    _              -> Nothing
 
-solutionPart2 :: IO Int
-solutionPart2 = do
-  (line1:line2:_) <- fmap parseInput <$> readLines
-  return $ minDistance stepDistance line1 line2
+solutionPart1 :: IO (Maybe Int)
+solutionPart1 = fmap (minDistance manhattanDistance) . linesToTuple <$> readInput
+
+solutionPart2 :: IO (Maybe Int)
+solutionPart2 = fmap (minDistance stepDistance) . linesToTuple <$> readInput
