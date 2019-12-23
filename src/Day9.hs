@@ -5,19 +5,15 @@ module Day9
 
 import           IntCodeProgram
 
-runDiagnosticProgram :: [Int] -> [String] -> ProgramOutput
-runDiagnosticProgram _ []           = Left "Program is empty."
-runDiagnosticProgram inputData prog = runIntCodeProgram $ ProgramState 0 inputData prog 0 0 False False
-
-showProgramOutput :: ProgramOutput -> String
-showProgramOutput (Left err)    = "Error: " ++ err
-showProgramOutput (Right state) = show $ result state
+runBoostProgram :: [Int] -> [String] -> ProgramResult
+runBoostProgram _ []           = Left "Program is empty."
+runBoostProgram inputData prog = runIntCodeProgram $ ProgramState 0 inputData prog 0 0 False False
 
 inputFile :: String
 inputFile = "./resources/input-day9.txt"
 
 solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showProgramOutput . runDiagnosticProgram [1]
+solutionPart1 = readInputData inputFile >>= putStrLn . showResult . runBoostProgram [1]
 
 solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= putStrLn . showProgramOutput . runDiagnosticProgram [2]
+solutionPart2 = readInputData inputFile >>= putStrLn . showResult . runBoostProgram [2]

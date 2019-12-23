@@ -3,7 +3,7 @@ module Day2
   , solutionPart2
   ) where
 
-import           IntCodeProgram
+import           IntCodeProgram hiding (showResult)
 
 replaceAt :: Int -> [String] -> [String] -> [String]
 replaceAt pos values list =
@@ -14,12 +14,12 @@ replaceAt pos values list =
 runGravityAssistProgram :: [String] -> Either String Int
 runGravityAssistProgram [] = Left "Program is missing!"
 runGravityAssistProgram prog =
-  case afterRunProgram of
+  case completedProgram of
     Right (res:_) -> Right $ read res
     Left err      -> Left err
     _             -> Left "Illegal program state!"
   where
-    afterRunProgram = program <$> runIntCodeProgram (ProgramState 0 [] prog 0 0 False False)
+    completedProgram = program <$> runIntCodeProgram (ProgramState 0 [] prog 0 0 False False)
 
 findInputPairFor :: Int -> [String] -> Either String (Int, Int)
 findInputPairFor output prog =

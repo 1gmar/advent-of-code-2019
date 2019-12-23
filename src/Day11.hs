@@ -7,7 +7,7 @@ module Day11
 
 import           Data.Char      (digitToInt, isDigit)
 import           Data.List      (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
-import           IntCodeProgram
+import           IntCodeProgram hiding (showResult)
 
 type Position = (Int, Int)
 
@@ -121,15 +121,15 @@ writeResult :: Either String String -> IO ()
 writeResult (Left err)     = putStrLn err
 writeResult (Right panels) = writeFile "./out/output-day11.txt" panels
 
-showCount :: Either String Int -> String
-showCount (Left err)  = "Error: " ++ err
-showCount (Right res) = show res
+showResult :: Either String Int -> String
+showResult (Left err)  = "Error: " ++ err
+showResult (Right res) = show res
 
 inputFile :: String
 inputFile = "./resources/input-day11.txt"
 
 solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showCount . fmap countPaintedPanels . runPaintingRobot Black
+solutionPart1 = readInputData inputFile >>= putStrLn . showResult . fmap countPaintedPanels . runPaintingRobot Black
 
 solutionPart2 :: IO ()
 solutionPart2 = readInputData inputFile >>= writeResult . fmap showRegistrationNumber . runPaintingRobot White

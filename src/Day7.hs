@@ -10,7 +10,7 @@ import           Data.List        (maximumBy, permutations)
 import           Data.Traversable (for)
 import           IntCodeProgram
 
-type AmpChainRunner = [String] -> [Int] -> ProgramOutput
+type AmpChainRunner = [String] -> [Int] -> ProgramResult
 
 data Amplifier =
   Amplifier
@@ -18,23 +18,23 @@ data Amplifier =
     , softState :: ProgramState
     }
 
-runSimpleChain :: [String] -> [Int] -> ProgramOutput
+runSimpleChain :: [String] -> [Int] -> ProgramResult
 runSimpleChain initProg = foldM chainResult (ProgramState 0 [] [] 0 0 False False)
   where
     chainResult ProgramState {..} phase = runIntCodeProgram $ ProgramState 0 [phase, result] initProg 0 0 False False
 
-findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [String] -> ProgramOutput
+findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [String] -> ProgramResult
 findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner
   where
     compareStates (ProgramState _ _ _ res1 _ _ _) (ProgramState _ _ _ res2 _ _ _) = res1 `compare` res2
 
-runLoopModeChain :: [String] -> [Int] -> ProgramOutput
+runLoopModeChain :: [String] -> [Int] -> ProgramResult
 runLoopModeChain initProg phaseSetting = loopOver amplifiers
   where
     amplifiers = zipWith buildAmplifier ['A' .. 'E'] phaseSetting
     buildAmplifier label phase = Amplifier label $ ProgramState 0 [phase] initProg 0 0 True False
 
-loopOver :: [Amplifier] -> ProgramOutput
+loopOver :: [Amplifier] -> ProgramResult
 loopOver [] = Left "Missing amplifier chain."
 loopOver [_] = Left "Illegal amplifier setup."
 loopOver (current:next@Amplifier {..}:rest) =
@@ -47,19 +47,13 @@ loopOver (current:next@Amplifier {..}:rest) =
     setupNext res = next {softState = inSignal res softState}
     inSignal signal state@ProgramState {..} = state {input = input ++ [signal]}
 
-showProgramOutput :: ProgramOutput -> String
-showProgramOutput (Left err)    = "Error: " ++ err
-showProgramOutput (Right state) = show $ result state
-
 inputFile :: String
 inputFile = "./resources/input-day7.txt"
 
 solutionPart1 :: IO ()
 solutionPart1 =
-  readInputData inputFile >>=
-  putStrLn . showProgramOutput . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4])
+  readInputData inputFile >>= putStrLn . showResult . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4])
 
 solutionPart2 :: IO ()
 solutionPart2 =
-  readInputData inputFile >>=
-  putStrLn . showProgramOutput . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9])
+  readInputData inputFile >>= putStrLn . showResult . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9])

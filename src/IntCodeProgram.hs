@@ -2,15 +2,16 @@
 
 module IntCodeProgram
   ( ProgramState(..)
-  , ProgramOutput
+  , ProgramResult
   , runIntCodeProgram
   , readInputData
+  , showResult
   ) where
 
 import           Data.Char                    (digitToInt, isDigit)
 import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, sepBy, skipSpaces, (+++))
 
-type ProgramOutput = Either String ProgramState
+type ProgramResult = Either String ProgramState
 
 type Parameter = (ParamMode, Int)
 
@@ -120,7 +121,7 @@ writeTo (_, resultP) _              = resultP
 endOfProgram :: [String] -> Int -> Bool
 endOfProgram program iPointer = "99" `elem` (fst <$> program `elemAt` iPointer)
 
-readInput :: ProgramState -> Instruction -> ProgramOutput
+readInput :: ProgramState -> Instruction -> ProgramResult
 readInput ProgramState {..} (Instruction _ []) = illegalProgramState iPointer program
 readInput state@ProgramState {..} (Instruction op (param:_)) =
   case input of
@@ -131,7 +132,7 @@ readInput state@ProgramState {..} (Instruction op (param:_)) =
     resultP = writeTo param relativeBase
     nextState value rest = state {iPointer = nextP, input = rest, program = programWith value resultP program}
 
-writeOutput :: ProgramState -> Instruction -> ProgramOutput
+writeOutput :: ProgramState -> Instruction -> ProgramResult
 writeOutput state@ProgramState {..} instr@Instruction {..} =
   case instr of
     Instruction _ (param:_) -> withParam param >>= yieldResult
@@ -145,7 +146,7 @@ writeOutput state@ProgramState {..} instr@Instruction {..} =
         then Right (nextState tuple)
         else runIntCodeProgram $ nextState tuple
 
-jumpToPointerIf :: ProgramState -> Instruction -> Predicate -> ProgramOutput
+jumpToPointerIf :: ProgramState -> Instruction -> Predicate -> ProgramResult
 jumpToPointerIf state@ProgramState {..} instr@Instruction {..} predicate =
   case instr of
     Instruction _ (param1:param2:_) -> withParam param1 >>= chooseIPointer param2 >>= jumpToAddress
@@ -157,7 +158,7 @@ jumpToPointerIf state@ProgramState {..} instr@Instruction {..} predicate =
       | predicate value = paramOf param state {program = prog}
       | otherwise = Right (nextIPointer operation iPointer, prog)
 
-testAssertion :: ProgramState -> Instruction -> Assertion -> ProgramOutput
+testAssertion :: ProgramState -> Instruction -> Assertion -> ProgramResult
 testAssertion state@ProgramState {..} instr@Instruction {..} predicate =
   case instr of
     Instruction _ (p1:p2:p3:_) -> evaluateFor (p1, p2, p3) state nextP test
@@ -168,7 +169,7 @@ testAssertion state@ProgramState {..} instr@Instruction {..} predicate =
       | arg1 `predicate` arg2 = 1
       | otherwise = 0
 
-computeValue :: ProgramState -> Instruction -> Operator -> ProgramOutput
+computeValue :: ProgramState -> Instruction -> Operator -> ProgramResult
 computeValue state@ProgramState {..} instr@Instruction {..} operator =
   case instr of
     Instruction _ (p1:p2:p3:_) -> evaluateFor (p1, p2, p3) state nextP operator
@@ -176,7 +177,7 @@ computeValue state@ProgramState {..} instr@Instruction {..} operator =
   where
     nextP = nextIPointer operation iPointer
 
-evaluateFor :: (Parameter, Parameter, Parameter) -> ProgramState -> Int -> Operator -> ProgramOutput
+evaluateFor :: (Parameter, Parameter, Parameter) -> ProgramState -> Int -> Operator -> ProgramResult
 evaluateFor (p1, p2, p3) state@ProgramState {..} nextP operator = do
   (arg1, prog1) <- paramOf p1 state
   (arg2, prog2) <- paramOf p2 state {program = prog1}
@@ -184,7 +185,7 @@ evaluateFor (p1, p2, p3) state@ProgramState {..} nextP operator = do
   let finalProg = programWith (arg1 `operator` arg2) resultP prog2
   runIntCodeProgram state {iPointer = nextP, program = finalProg}
 
-updateRelativeBase :: ProgramState -> Instruction -> ProgramOutput
+updateRelativeBase :: ProgramState -> Instruction -> ProgramResult
 updateRelativeBase state@ProgramState {..} instr@Instruction {..} =
   case instr of
     Instruction _ (param:_) -> paramOf param state >>= updateBase >>= continueProgram
@@ -194,10 +195,10 @@ updateRelativeBase state@ProgramState {..} instr@Instruction {..} =
     updateBase (value, prog) = Right (relativeBase + value, prog)
     continueProgram (base, prog) = runIntCodeProgram state {iPointer = nextP, program = prog, relativeBase = base}
 
-illegalProgramState :: Int -> [String] -> ProgramOutput
+illegalProgramState :: Int -> [String] -> ProgramResult
 illegalProgramState iPointer program = Left $ "Illegal program state at: " ++ show (iPointer, program)
 
-runInstruction :: ProgramState -> Instruction -> ProgramOutput
+runInstruction :: ProgramState -> Instruction -> ProgramResult
 runInstruction state instr@Instruction {..} =
   case operation of
     Input            -> readInput state instr
@@ -226,7 +227,7 @@ buildInstruction instrCode args =
       let params = zipWith paramZipper [mode1, mode2, mode3] args
       Right $ Instruction op params
 
-runIntCodeProgram :: ProgramState -> ProgramOutput
+runIntCodeProgram :: ProgramState -> ProgramResult
 runIntCodeProgram state@ProgramState {..}
   | endOfProgram program iPointer = Right state {halted = True}
   | otherwise = processInstruction $ drop iPointer program
@@ -251,3 +252,9 @@ parseInput = concatMap fst . readP_to_S inputParser
 
 readInputData :: String -> IO [String]
 readInputData file = parseInput <$> readFile file
+
+showResult :: ProgramResult -> String
+showResult progResult =
+  case progResult of
+    Right state -> show $ result state
+    Left err    -> "Error: " ++ err
