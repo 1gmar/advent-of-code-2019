@@ -6,8 +6,7 @@ module Day9
 import           IntCodeProgram
 
 runBoostProgram :: [Int] -> [String] -> ProgramResult
-runBoostProgram _ []           = Left "Program is empty."
-runBoostProgram inputData prog = runIntCodeProgram $ ProgramState 0 inputData prog 0 0 False False
+runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
 inputFile :: String
 inputFile = "./resources/input-day9.txt"

@@ -6,8 +6,7 @@ module Day5
 import           IntCodeProgram
 
 runDiagnosticProgram :: [Int] -> [String] -> ProgramResult
-runDiagnosticProgram _ []           = Left "Program is missing!"
-runDiagnosticProgram inputData prog = runIntCodeProgram $ ProgramState 0 inputData prog 0 0 False False
+runDiagnosticProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
 inputFile :: String
 inputFile = "./resources/input-day5.txt"

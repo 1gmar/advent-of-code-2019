@@ -6,6 +6,8 @@ module IntCodeProgram
   , runIntCodeProgram
   , readInputData
   , showResult
+  , programState
+  , programWithInput
   ) where
 
 import           Data.Char                    (digitToInt, isDigit)
@@ -36,13 +38,13 @@ data Operation
 
 data ProgramState =
   ProgramState
-    { iPointer      :: Int
-    , input         :: [Int]
-    , program       :: [String]
-    , result        :: Int
-    , relativeBase  :: Int
-    , interruptMode :: Bool
-    , halted        :: Bool
+    { iPointer     :: Int
+    , halted       :: Bool
+    , input        :: [Int]
+    , output       :: ![Int]
+    , program      :: ![String]
+    , relativeBase :: Int
+    , result       :: Int
     }
 
 data Instruction =
@@ -121,12 +123,15 @@ writeTo (_, resultP) _              = resultP
 endOfProgram :: [String] -> Int -> Bool
 endOfProgram program iPointer = "99" `elem` (fst <$> program `elemAt` iPointer)
 
+returnState :: ProgramState -> Bool -> ProgramResult
+returnState state@ProgramState {..} isHalted = Right state {halted = isHalted, output = reverse output}
+
 readInput :: ProgramState -> Instruction -> ProgramResult
 readInput ProgramState {..} (Instruction _ []) = illegalProgramState iPointer program
 readInput state@ProgramState {..} (Instruction op (param:_)) =
   case input of
+    []         -> returnState state False
     value:rest -> runIntCodeProgram $ nextState value rest
-    _          -> Left "Missing program input data."
   where
     nextP = nextIPointer op iPointer
     resultP = writeTo param relativeBase
@@ -135,16 +140,12 @@ readInput state@ProgramState {..} (Instruction op (param:_)) =
 writeOutput :: ProgramState -> Instruction -> ProgramResult
 writeOutput state@ProgramState {..} instr@Instruction {..} =
   case instr of
-    Instruction _ (param:_) -> withParam param >>= yieldResult
+    Instruction _ (param:_) -> withParam param >>= runIntCodeProgram . nextState
     _                       -> illegalProgramState iPointer program
   where
     nextP = nextIPointer operation iPointer
     withParam param = paramOf param state
-    nextState (value, prog) = state {iPointer = nextP, result = value, program = prog, halted = endOfProgram prog nextP}
-    yieldResult tuple =
-      if interruptMode
-        then Right (nextState tuple)
-        else runIntCodeProgram $ nextState tuple
+    nextState (value, prog) = state {iPointer = nextP, output = value : output, program = prog, result = value}
 
 jumpToPointerIf :: ProgramState -> Instruction -> Predicate -> ProgramResult
 jumpToPointerIf state@ProgramState {..} instr@Instruction {..} predicate =
@@ -228,8 +229,9 @@ buildInstruction instrCode args =
       Right $ Instruction op params
 
 runIntCodeProgram :: ProgramState -> ProgramResult
+runIntCodeProgram (ProgramState _ _ _ _ [] _ _) = Left "Program is missing!"
 runIntCodeProgram state@ProgramState {..}
-  | endOfProgram program iPointer = Right state {halted = True}
+  | endOfProgram program iPointer = returnState state True
   | otherwise = processInstruction $ drop iPointer program
   where
     processInstruction [] = Left "Program reached end of input!"
@@ -258,3 +260,9 @@ showResult progResult =
   case progResult of
     Right state -> show $ result state
     Left err    -> "Error: " ++ err
+
+programState :: [String] -> ProgramState
+programState prog = ProgramState 0 False [] [] prog 0 0
+
+programWithInput :: [String] -> [Int] -> ProgramState
+programWithInput prog inputData = (programState prog) {input = inputData}

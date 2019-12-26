@@ -19,33 +19,32 @@ data Amplifier =
     }
 
 runSimpleChain :: [String] -> [Int] -> ProgramResult
-runSimpleChain initProg = foldM chainResult (ProgramState 0 [] [] 0 0 False False)
+runSimpleChain initProg = foldM chainResult (programState initProg)
   where
-    chainResult ProgramState {..} phase = runIntCodeProgram $ ProgramState 0 [phase, result] initProg 0 0 False False
+    chainResult ProgramState {..} phase = runIntCodeProgram $ programWithInput initProg [phase, result]
 
 findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [String] -> ProgramResult
 findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner
   where
-    compareStates (ProgramState _ _ _ res1 _ _ _) (ProgramState _ _ _ res2 _ _ _) = res1 `compare` res2
+    compareStates state1 state2 = result state1 `compare` result state2
 
 runLoopModeChain :: [String] -> [Int] -> ProgramResult
 runLoopModeChain initProg phaseSetting = loopOver amplifiers
   where
     amplifiers = zipWith buildAmplifier ['A' .. 'E'] phaseSetting
-    buildAmplifier label phase = Amplifier label $ ProgramState 0 [phase] initProg 0 0 True False
+    buildAmplifier label phase = Amplifier label $ programWithInput initProg [phase]
 
 loopOver :: [Amplifier] -> ProgramResult
 loopOver [] = Left "Missing amplifier chain."
 loopOver [_] = Left "Illegal amplifier setup."
-loopOver (current:next@Amplifier {..}:rest) =
-  case current of
-    Amplifier 'E' state@(ProgramState _ _ _ _ _ _ True) -> Right state
-    amp@(Amplifier 'A' state@(ProgramState 0 _ _ _ _ _ _)) -> runIntCodeProgram (inSignal 0 state) >>= chainResult amp
-    amp@(Amplifier _ state) -> runIntCodeProgram state >>= chainResult amp
+loopOver (current@(Amplifier code state):next@Amplifier {..}:rest)
+  | code == 'E' && halted state = Right state
+  | code == 'A' && iPointer state == 0 = runIntCodeProgram (inSignal 0 state) >>= chainResult current
+  | otherwise = runIntCodeProgram state >>= chainResult current
   where
-    chainResult amp state@(ProgramState _ _ _ res _ _ _) = loopOver (setupNext res : rest ++ [amp {softState = state}])
+    chainResult amp nextState = loopOver (setupNext (result nextState) : rest ++ [amp {softState = nextState}])
     setupNext res = next {softState = inSignal res softState}
-    inSignal signal state@ProgramState {..} = state {input = input ++ [signal]}
+    inSignal signal nextState@ProgramState {..} = nextState {input = input ++ [signal]}
 
 inputFile :: String
 inputFile = "./resources/input-day7.txt"

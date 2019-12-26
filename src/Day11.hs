@@ -5,7 +5,6 @@ module Day11
   , solutionPart2
   ) where
 
-import           Data.Char      (digitToInt, isDigit)
 import           Data.List      (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
 import           IntCodeProgram hiding (showResult)
 
@@ -76,19 +75,24 @@ moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
 paintShip :: Robot -> Either String Robot
 paintShip robot@Robot {..} =
   case robot of
-    Robot _ _ (ProgramState _ _ _ _ _ _ True) _ -> Right robot
+    Robot _ _ (ProgramState _ True _ _ _ _ _) _ -> Right robot
     Robot _ _ state _ -> do
       let color = fromEnum $ currentColor robot
-      stateWithColor <- runIntCodeProgram state {input = [color, color]}
-      stateWithDirection <- runIntCodeProgram stateWithColor
-      let brushRobot = paintCurrentPanel robot $ toEnum (result stateWithColor)
-      let rotatedRobot = rotateRobot brushRobot $ toEnum (result stateWithDirection)
-      paintShip $ (moveRobot rotatedRobot) {software = stateWithDirection}
+      interruptedState <- runIntCodeProgram state {input = [color]}
+      (nextColor, nextDirection) <- extractOutput $ output interruptedState
+      let brushRobot = paintCurrentPanel robot $ toEnum nextColor
+      let rotatedRobot = rotateRobot brushRobot $ toEnum nextDirection
+      paintShip $ (moveRobot rotatedRobot) {software = interruptedState {output = []}}
+  where
+    extractOutput out =
+      case out of
+        [nextColor, nextDirection] -> Right (nextColor, nextDirection)
+        _                          -> Left $ "Incompatible output data: " ++ show out
 
 runPaintingRobot :: Color -> [String] -> Either String Robot
 runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
   where
-    soft = ProgramState 0 [] prog 0 0 True False
+    soft = programState prog
     pan = Panel (0, 0) startColor
 
 countPaintedPanels :: Robot -> Int

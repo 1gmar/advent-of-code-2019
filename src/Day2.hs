@@ -12,23 +12,22 @@ replaceAt pos values list =
    in upper ++ values ++ suffix
 
 runGravityAssistProgram :: [String] -> Either String Int
-runGravityAssistProgram [] = Left "Program is missing!"
 runGravityAssistProgram prog =
   case completedProgram of
     Right (res:_) -> Right $ read res
     Left err      -> Left err
     _             -> Left "Illegal program state!"
   where
-    completedProgram = program <$> runIntCodeProgram (ProgramState 0 [] prog 0 0 False False)
+    completedProgram = program <$> runIntCodeProgram (programState prog)
 
 findInputPairFor :: Int -> [String] -> Either String (Int, Int)
-findInputPairFor output prog =
+findInputPairFor targetOutput prog =
   case nounVerbPairs of
-    []     -> Left $ "Could not find pair for: " ++ show output
+    []     -> Left $ "Could not find pair for: " ++ show targetOutput
     pair:_ -> Right pair
   where
-    nounVerbPairs = [(noun, verb) | noun <- [0 .. 99], verb <- [0 .. 99], output `elem` computeOutputFor noun verb]
-    computeOutputFor noun verb = runGravityAssistProgram $ replaceAt 1 [show noun, show verb] prog
+    nounVerbPairs = [(noun, verb) | noun <- [0 .. 99], verb <- [0 .. 99], targetOutput `elem` outputFor noun verb]
+    outputFor noun verb = runGravityAssistProgram $ replaceAt 1 [show noun, show verb] prog
 
 nounVerbChecksum :: (Int, Int) -> Int
 nounVerbChecksum (noun, verb) = 100 * noun + verb
