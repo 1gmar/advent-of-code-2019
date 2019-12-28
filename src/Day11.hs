@@ -37,7 +37,7 @@ data Robot =
   Robot
     { panel     :: Panel
     , direction :: Direction
-    , software  :: ProgramState
+    , state     :: ProgramState
     , grid      :: PanelGrid
     }
 
@@ -73,16 +73,15 @@ moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
     DOWN  -> robot {panel = pan {position = (x, y + 1)}}
 
 paintShip :: Robot -> Either String Robot
-paintShip robot@Robot {..} =
-  case robot of
-    Robot _ _ (ProgramState _ True _ _ _ _ _) _ -> Right robot
-    Robot _ _ state _ -> do
-      let color = fromEnum $ currentColor robot
-      interruptedState <- runIntCodeProgram state {input = [color]}
-      (nextColor, nextDirection) <- extractOutput $ output interruptedState
-      let brushRobot = paintCurrentPanel robot $ toEnum nextColor
-      let rotatedRobot = rotateRobot brushRobot $ toEnum nextDirection
-      paintShip $ (moveRobot rotatedRobot) {software = interruptedState {output = []}}
+paintShip robot@Robot {..}
+  | halted state = Right robot
+  | otherwise = do
+    let color = fromEnum $ currentColor robot
+    interruptedState <- runIntCodeProgram state {input = [color]}
+    (nextColor, nextDirection) <- extractOutput $ output interruptedState
+    let brushRobot = paintCurrentPanel robot $ toEnum nextColor
+    let rotatedRobot = rotateRobot brushRobot $ toEnum nextDirection
+    paintShip $ (moveRobot rotatedRobot) {state = interruptedState {output = []}}
   where
     extractOutput out =
       case out of

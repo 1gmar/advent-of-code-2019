@@ -6,7 +6,7 @@ import           Data.Char      (chr)
 import           IntCodeProgram
 
 getEasterEgg :: [String] -> Either String String
-getEasterEgg = fmap (fmap chr . output) . runIntCodeProgram . programState
+getEasterEgg = fmap (map chr . output) . runIntCodeProgram . programState
 
 writeEgg :: Either String String -> IO ()
 writeEgg (Left err)  = putStrLn err
