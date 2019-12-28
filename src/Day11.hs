@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Day11
@@ -12,12 +13,24 @@ type Position = (Int, Int)
 
 type PanelGrid = [Panel]
 
+class (Eq a, Enum a, Bounded a) =>
+      CyclicEnum a
+  where
+  cPred :: a -> a
+  cPred value
+    | value == minBound = maxBound
+    | otherwise = pred value
+  cSucc :: a -> a
+  cSucc value
+    | value == maxBound = minBound
+    | otherwise = succ value
+
 data Direction
-  = LEFT
+  = UP
   | RIGHT
-  | UP
   | DOWN
-  deriving (Enum)
+  | LEFT
+  deriving (Eq, Enum, Bounded, Show, CyclicEnum)
 
 data Color
   = Black
@@ -47,22 +60,22 @@ currentColor Robot {..} =
     Just (Panel _ color) -> color
     Nothing              -> Black
 
-paintCurrentPanel :: Robot -> Color -> Robot
-paintCurrentPanel robot@Robot {..} newColor =
-  case find (== panel) grid of
-    Just pan -> robot {grid = (pan {color = newColor}) : (grid \\ [pan])}
-    Nothing  -> robot {grid = Panel (position panel) newColor : grid}
+paintCurrentPanel :: Robot -> Int -> Either String Robot
+paintCurrentPanel robot@Robot {..} colorCode
+  | colorCode `elem` [0, 1] = Right paintedPanel
+  | otherwise = Left $ "Unknown color code: " ++ show colorCode
+  where
+    newColor = toEnum colorCode
+    newPanel = robot {grid = Panel (position panel) newColor : grid}
+    updatePanel pan = robot {grid = (pan {color = newColor}) : (grid \\ [pan])}
+    paintedPanel = maybe newPanel updatePanel $ find (== panel) grid
 
-rotateRobot :: Robot -> Direction -> Robot
-rotateRobot robot@Robot {..} newDirection =
-  case (newDirection, direction) of
-    (LEFT, DOWN)  -> robot {direction = RIGHT}
-    (LEFT, RIGHT) -> robot {direction = UP}
-    (LEFT, UP)    -> robot {direction = LEFT}
-    (RIGHT, DOWN) -> robot {direction = LEFT}
-    (RIGHT, LEFT) -> robot {direction = UP}
-    (RIGHT, UP)   -> robot {direction = RIGHT}
-    _             -> robot {direction = DOWN}
+rotateRobot :: Robot -> Int -> Either String Robot
+rotateRobot robot@Robot {..} directionCode =
+  case directionCode of
+    0 -> Right robot {direction = cPred direction}
+    1 -> Right robot {direction = cSucc direction}
+    _ -> Left $ "Unknown direction code: " ++ show directionCode
 
 moveRobot :: Robot -> Robot
 moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
@@ -79,8 +92,8 @@ paintShip robot@Robot {..}
     let color = fromEnum $ currentColor robot
     interruptedState <- runIntCodeProgram state {input = [color]}
     (nextColor, nextDirection) <- extractOutput $ output interruptedState
-    let brushRobot = paintCurrentPanel robot $ toEnum nextColor
-    let rotatedRobot = rotateRobot brushRobot $ toEnum nextDirection
+    brushRobot <- paintCurrentPanel robot nextColor
+    rotatedRobot <- rotateRobot brushRobot nextDirection
     paintShip $ (moveRobot rotatedRobot) {state = interruptedState {output = []}}
   where
     extractOutput out =
