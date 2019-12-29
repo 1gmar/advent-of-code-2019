@@ -30,7 +30,7 @@ data Direction
   | RIGHT
   | DOWN
   | LEFT
-  deriving (Eq, Enum, Bounded, Show, CyclicEnum)
+  deriving (Eq, Enum, Bounded, CyclicEnum)
 
 data Color
   = Black
@@ -116,21 +116,28 @@ showPanel Panel {..} =
     Black -> '⬜'
     White -> '⬛'
 
+xPos :: Panel -> Int
+xPos = fst . position
+
+yPos :: Panel -> Int
+yPos = snd . position
+
+compareOn :: (Panel -> Int) -> Panel -> Panel -> Bool
+compareOn fPos panel1 panel2 = fPos panel1 == fPos panel2
+
 fillGridLine :: (Int, Int) -> PanelGrid -> PanelGrid
-fillGridLine (lower, upper) ~line@(Panel (_, y) _:_) = sortOn (fst . position) fullLine
+fillGridLine (lower, upper) ~line@(Panel (_, y) _:_) = sortOn xPos fullLine
   where
-    fullLine = unionBy xCoordinate line fillerLine
+    fullLine = unionBy (compareOn xPos) line fillerLine
     fillerLine = map (`Panel` Black) $ [lower .. upper] `zip` repeat y
-    xCoordinate (Panel (x1, _) _) (Panel (x2, _) _) = x1 == x2
 
 showRegistrationNumber :: Robot -> String
 showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines
   where
-    xs = map (fst . position) grid
+    xs = map xPos grid
     [minX, maxX] = map (\f -> f xs) [minimum, maximum]
-    gridLines = groupBy yCoordinate $ sortOn (snd . position) grid
+    gridLines = groupBy (compareOn yPos) $ sortOn yPos grid
     fullGridLines = fillGridLine (minX, maxX) <$> gridLines
-    yCoordinate (Panel (_, y1) _) (Panel (_, y2) _) = y1 == y2
     showPanels gridRow rows = map showPanel gridRow : rows
 
 writeResult :: Either String String -> IO ()
