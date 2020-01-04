@@ -11,7 +11,7 @@ module IntCodeProgram
   ) where
 
 import           Data.Char                    (digitToInt, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, sepBy, skipSpaces, (+++))
+import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch1, readP_to_S, sepBy, skipSpaces, (+++))
 
 type ProgramResult = Either String ProgramState
 
@@ -236,9 +236,9 @@ runIntCodeProgram state@ProgramState {..}
   where
     processInstruction [] = Left "Program reached end of input!"
     processInstruction (instr:args)
-      | any (`elem` "349") instr = buildInstruction instr (take 1 args) >>= runInstruction state
-      | any (`elem` "56") instr = buildInstruction instr (take 2 args) >>= runInstruction state
-      | any (`elem` "1278") instr = buildInstruction instr (take 3 args) >>= runInstruction state
+      | last instr `elem` "349" = buildInstruction instr (take 1 args) >>= runInstruction state
+      | last instr `elem` "56" = buildInstruction instr (take 2 args) >>= runInstruction state
+      | last instr `elem` "1278" = buildInstruction instr (take 3 args) >>= runInstruction state
       | otherwise = Left $ "Invalid instruction : " ++ show instr
 
 inputParser :: ReadP [String]
@@ -246,7 +246,7 @@ inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof
   where
     commaSeparatedIntegers = integer `sepBy` char ','
     integer = positive +++ negative
-    positive = munch isDigit
+    positive = munch1 isDigit
     negative = char '-' >>= \sign -> (sign :) <$> positive
 
 parseInput :: String -> [String]

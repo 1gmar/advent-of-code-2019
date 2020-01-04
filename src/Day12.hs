@@ -1,6 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Day12 where
+module Day12
+  ( solutionPart1
+  , solutionPart2
+  ) where
 
 import           Data.Char                    (isControl, isDigit)
 import           Data.Foldable                (foldl')

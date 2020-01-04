@@ -1,4 +1,7 @@
-module Day14 where
+module Day14
+  ( solutionPart1
+  , solutionPart2
+  ) where
 
 import           Data.Bifunctor               (bimap)
 import           Data.Char                    (isAsciiUpper, isControl, isDigit)
