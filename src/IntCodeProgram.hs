@@ -217,7 +217,7 @@ buildInstruction instrCode args =
     paramMode:'0':[opChar]                        -> instructionWith paramMode '0' '0' opChar
     paramMode2:paramMode1:'0':[opChar]            -> instructionWith paramMode1 paramMode2 '0' opChar
     paramMode3:paramMode2:paramMode1:'0':[opChar] -> instructionWith paramMode1 paramMode2 paramMode3 opChar
-    _                                             -> Left $ "Unknown instruction: " ++ show instrCode
+    _                                             -> Left $ "Invalid instruction format: " ++ show instrCode
   where
     paramZipper mode param = (mode, read param)
     instructionWith paramMode1 paramMode2 paramMode3 opChar = do
@@ -234,12 +234,12 @@ runIntCodeProgram state@ProgramState {..}
   | endOfProgram program iPointer = returnState state True
   | otherwise = processInstruction $ drop iPointer program
   where
-    processInstruction [] = Left "Program reached end of input!"
+    processInstruction [] = Left "Memory access out of bounds!"
     processInstruction (instr:args)
       | last instr `elem` "349" = buildInstruction instr (take 1 args) >>= runInstruction state
       | last instr `elem` "56" = buildInstruction instr (take 2 args) >>= runInstruction state
       | last instr `elem` "1278" = buildInstruction instr (take 3 args) >>= runInstruction state
-      | otherwise = Left $ "Invalid instruction : " ++ show instr
+      | otherwise = Left $ "Unknown instruction: " ++ show instr
 
 inputParser :: ReadP [String]
 inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof

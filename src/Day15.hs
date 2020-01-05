@@ -7,7 +7,7 @@ module Day15
 
 import           IntCodeProgram
 
-type PriorityQueue = [Node]
+type PriorityQueue = [Droid]
 
 data Direction
   = Center
@@ -23,28 +23,28 @@ data Destination
   | OxygenSystem
   deriving (Eq, Enum)
 
-data Node =
-  Node
+data Droid =
+  Droid
     { direction   :: Direction
     , moves       :: Int
     , state       :: ProgramState
     , destination :: Destination
     }
 
-(<:) :: Node -> PriorityQueue -> PriorityQueue
-(<:) node [] = [node]
-(<:) node queue@(x:xs)
-  | moves node > moves x = x : node <: xs
-  | otherwise = node : queue
+(<:) :: Droid -> PriorityQueue -> PriorityQueue
+(<:) droid [] = [droid]
+(<:) droid queue@(x:xs)
+  | moves droid > moves x = x : droid <: xs
+  | otherwise = droid : queue
 
 (<++) :: PriorityQueue -> PriorityQueue -> PriorityQueue
 (<++) [] ys     = ys
 (<++) (x:xs) ys = x <: (xs <++ ys)
 
-neighbors :: Node -> [Node]
-neighbors node@Node {..} = map neighbor $ filter (/= backwards direction) (enumFrom North)
+neighbors :: Droid -> [Droid]
+neighbors droid@Droid {..} = map neighbor $ filter (/= backwards direction) (enumFrom North)
   where
-    neighbor dir = node {direction = dir, moves = moves + 1}
+    neighbor dir = droid {direction = dir, moves = moves + 1}
     backwards dir =
       case dir of
         Center -> Center
@@ -52,35 +52,35 @@ neighbors node@Node {..} = map neighbor $ filter (/= backwards direction) (enumF
         West   -> East
         _      -> (toEnum . subtract 1 . fromEnum) dir
 
-moveDroid :: Node -> Either String Node
-moveDroid node@Node {..} = do
+moveDroid :: Droid -> Either String Droid
+moveDroid droid@Droid {..} = do
   movedState <- runIntCodeProgram state {input = [fromEnum direction]}
   let dest = toEnum $ result movedState
-  Right node {state = movedState, destination = dest}
+  Right droid {state = movedState, destination = dest}
 
-moveDroids :: [Node] -> Either String [Node]
+moveDroids :: [Droid] -> Either String [Droid]
 moveDroids = fmap dodgeWalls . mapM moveDroid
   where
     dodgeWalls = filter ((/= Wall) . destination)
 
-searchMinPath :: PriorityQueue -> Either String Node
+searchMinPath :: PriorityQueue -> Either String Droid
 searchMinPath [] = Left "Illegal priority queue state!"
-searchMinPath (node:queue)
-  | destination node == OxygenSystem = Right node
-  | otherwise = moveDroids (neighbors node) >>= searchMinPath . (<++ queue)
+searchMinPath (droid:queue)
+  | destination droid == OxygenSystem = Right droid
+  | otherwise = moveDroids (neighbors droid) >>= searchMinPath . (<++ queue)
 
-spreadOxygen :: Int -> [Node] -> Either String Int
+spreadOxygen :: Int -> [Droid] -> Either String Int
 spreadOxygen minutes edges
   | null edges = Right $ subtract 1 minutes
   | otherwise = moveDroids (concatMap neighbors edges) >>= spreadOxygen (minutes + 1)
 
-findOxygenMinutes :: [Node] -> Either String Int
-findOxygenMinutes startNode = do
-  oxygenNode <- searchMinPath startNode
-  spreadOxygen 0 [oxygenNode {direction = Center}]
+findOxygenMinutes :: [Droid] -> Either String Int
+findOxygenMinutes queue = do
+  atOxygenDroid <- searchMinPath queue
+  spreadOxygen 0 [atOxygenDroid {direction = Center}]
 
-startingQueue :: [String] -> [Node]
-startingQueue prog = [Node Center 0 (programState prog) Empty]
+startingQueue :: [String] -> [Droid]
+startingQueue prog = [Droid Center 0 (programState prog) Empty]
 
 printResult :: Either String Int -> IO ()
 printResult (Left err)  = putStrLn $ "Error: " ++ err
