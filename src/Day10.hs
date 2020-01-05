@@ -3,9 +3,8 @@ module Day10
   , solutionPart2
   ) where
 
-import           Data.Char                    (isControl)
-import           Data.List                    (maximumBy, sortBy, (\\))
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, many1, readP_to_S, satisfy, sepBy, skipSpaces)
+import           Data.List  (maximumBy, sortBy, (\\))
+import           ParseUtils hiding (count)
 
 data Cell
   = Empty
@@ -71,10 +70,16 @@ allLaserRotations reference asteroidMap = rotation ++ allLaserRotations referenc
   where
     rotation = (sortClockWise reference . findVaporizedAsteroidsFrom reference) asteroidMap
 
-inputParser :: ReadP [Row]
-inputParser = skipSpaces *> rows `sepBy` endOfLine <* skipSpaces <* eof
+find200thVaporizedAsteroid :: AsteroidMap -> Position
+find200thVaporizedAsteroid asteroidMap = get200thElem vaporizedAsteroids
   where
-    endOfLine = satisfy isControl
+    laserPos = fst $ findBestPosition asteroidMap
+    vaporizedAsteroids = (allLaserRotations laserPos . filter (/= laserPos)) asteroidMap
+    get200thElem = last . take 200
+
+inputParser :: ReadP [Row]
+inputParser = trimSpacesEOF $ rows `sepBy` endOfLine
+  where
     rows = many1 cell
     cell = readCell <$> choice [char '#', char '.']
     readCell '#' = Asteroid
@@ -103,9 +108,7 @@ readInput = parseInput <$> readFile "./resources/input-day10.txt"
 solutionPart1 :: IO (Position, Int)
 solutionPart1 = findBestPosition <$> readInput
 
-solutionPart2 :: Position -> IO Int
-solutionPart2 laserPos = posChecksum . get200thElem . vaporizedAsteroids <$> readInput
+solutionPart2 :: IO Int
+solutionPart2 = posChecksum . find200thVaporizedAsteroid <$> readInput
   where
-    vaporizedAsteroids = allLaserRotations laserPos . filter (/= laserPos)
-    get200thElem = last . take 200
     posChecksum (x, y) = 100 * x + y

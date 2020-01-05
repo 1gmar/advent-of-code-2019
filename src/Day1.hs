@@ -3,8 +3,7 @@ module Day1
   , solutionPart2
   ) where
 
-import           Data.Char                    (isControl, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, eof, munch1, readP_to_S, satisfy, sepBy, skipSpaces)
+import           ParseUtils
 
 evalMass :: Int -> Int
 evalMass = subtract 2 . (`div` 3)
@@ -18,10 +17,7 @@ sumTotalFuelMass = sum . fuelAwareMassValues
     fuelAwareMassValues = concatMap (takeWhile (> 0) . iterate evalMass . evalMass)
 
 inputParser :: ReadP [Int]
-inputParser = skipSpaces *> line `sepBy` endOfLine <* skipSpaces <* eof
-  where
-    endOfLine = satisfy isControl
-    line = read <$> munch1 isDigit
+inputParser = trimSpacesEOF $ integer `sepBy` endOfLine
 
 parseInput :: String -> [Int]
 parseInput = concatMap fst . readP_to_S inputParser

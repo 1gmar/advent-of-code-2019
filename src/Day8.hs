@@ -3,8 +3,8 @@ module Day8
   , solutionPart2
   ) where
 
-import           Data.List                    (minimumBy)
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, eof, many, readP_to_S, skipSpaces)
+import           Data.List  (minimumBy)
+import           ParseUtils
 
 data Pixel
   = Black
@@ -58,9 +58,9 @@ readImage []      = []
 readImage rawData = take layerLength rawData : readImage (drop layerLength rawData)
 
 inputParser :: ReadP String
-inputParser = skipSpaces *> digits <* skipSpaces <* eof
+inputParser = trimSpacesEOF digits
   where
-    digits = many $ choice [char '0', char '1', char '2']
+    digits = many1 $ choice [char '0', char '1', char '2']
 
 parseInput :: String -> [Pixel]
 parseInput = map readColor . concatMap fst . readP_to_S inputParser

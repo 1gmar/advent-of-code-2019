@@ -5,9 +5,8 @@ module Day3
   , solutionPart2
   ) where
 
-import           Data.Char                    (isControl, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, count, eof, munch, readP_to_S, satisfy, sepBy,
-                                               skipSpaces)
+import           Data.Maybe (mapMaybe)
+import           ParseUtils
 
 data SegmentType
   = Vertical
@@ -33,7 +32,7 @@ type Range = (Int, Int)
 
 type StepsCache = [(Point, Int)]
 
-type SegmentFolder = Segment -> Segment -> Int
+type DistanceFun = Segment -> Segment -> Maybe Int
 
 type FoldState = (Line, (Point, StepsCache, Int))
 
@@ -47,20 +46,21 @@ intersects HSegment {..} VSegment {..}       = y `inRange` yRange && x `inRange`
 intersects vs@VSegment {..} hs@HSegment {..} = intersects hs vs
 intersects _ _                               = False
 
-manhattanDistance :: Segment -> Segment -> Int
-manhattanDistance HSegment {..} VSegment {..}       = abs x + abs y
+manhattanDistance :: Segment -> Segment -> Maybe Int
+manhattanDistance HSegment {..} VSegment {..}       = Just $ abs x + abs y
 manhattanDistance vs@VSegment {..} hs@HSegment {..} = manhattanDistance hs vs
-manhattanDistance _ _                               = 0
+manhattanDistance _ _                               = Nothing
 
-stepDistance :: Segment -> Segment -> Int
-stepDistance (HSegment y (_, x1) hSteps) (VSegment x (_, y1) vSteps) = vSteps + hSteps - abs (x1 - x) - abs (y1 - y)
-stepDistance vs@VSegment {..} hs@HSegment {..}                       = stepDistance hs vs
-stepDistance _ _                                                     = 0
+stepDistance :: Segment -> Segment -> Maybe Int
+stepDistance (HSegment y (_, x1) s1) (VSegment x (_, y1) s2) = Just $ s1 + s2 - abs (x1 - x) - abs (y1 - y)
+stepDistance vs@VSegment {..} hs@HSegment {..}               = stepDistance hs vs
+stepDistance _ _                                             = Nothing
 
-minDistance :: SegmentFolder -> (Line, Line) -> Int
-minDistance foldSeg (line1, line2) = (minimum . filter (/= 0) . foldr collect []) line2
+minDistance :: DistanceFun -> (Line, Line) -> Int
+minDistance distFun (line1, line2) = (minimum . foldr collect []) line2
   where
-    collect segment acc = (foldSeg segment <$> filter (segment `intersects`) line1) ++ acc
+    collect segment acc = mapMaybe (distFun segment) (intersectsLine segment) ++ acc
+    intersectsLine segment = filter (segment `intersects`) line1
 
 parseLine :: [String] -> Line
 parseLine = fst . foldl collectSegments ([], ((0, 0), [], 0))
@@ -91,11 +91,10 @@ nextPoint direction (x, y) distance =
     _   -> ((x + distance, y), Horizontal)
 
 inputParser :: ReadP [Line]
-inputParser = skipSpaces *> count 2 (line <* endOfLine) <* skipSpaces <* eof
+inputParser = trimSpacesEOF $ count 2 (line <* endOfLine)
   where
-    endOfLine = satisfy isControl
     line = parseLine <$> segment `sepBy` char ','
-    segment = directionLetter >>= \letter -> (letter :) <$> munch isDigit
+    segment = directionLetter `parseAndAppend` integerStr
     directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
 
 parseInput :: String -> [Line]

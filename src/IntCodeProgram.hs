@@ -10,8 +10,8 @@ module IntCodeProgram
   , programWithInput
   ) where
 
-import           Data.Char                    (digitToInt, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch1, readP_to_S, sepBy, skipSpaces, (+++))
+import           Data.Char  (digitToInt)
+import           ParseUtils
 
 type ProgramResult = Either String ProgramState
 
@@ -242,12 +242,7 @@ runIntCodeProgram state@ProgramState {..}
       | otherwise = Left $ "Unknown instruction: " ++ show instr
 
 inputParser :: ReadP [String]
-inputParser = skipSpaces *> commaSeparatedIntegers <* skipSpaces <* eof
-  where
-    commaSeparatedIntegers = integer `sepBy` char ','
-    integer = positive +++ negative
-    positive = munch1 isDigit
-    negative = char '-' >>= \sign -> (sign :) <$> positive
+inputParser = trimSpacesEOF $ integerStr `sepBy` char ','
 
 parseInput :: String -> [String]
 parseInput = concatMap fst . readP_to_S inputParser

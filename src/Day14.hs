@@ -3,11 +3,11 @@ module Day14
   , solutionPart2
   ) where
 
-import           Data.Bifunctor               (bimap)
-import           Data.Char                    (isAsciiUpper, isControl, isDigit)
-import           Data.List                    (find, groupBy, sortOn, (\\))
-import           Data.Maybe                   (listToMaybe)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch1, readP_to_S, satisfy, sepBy, skipSpaces, string)
+import           Data.Bifunctor (bimap)
+import           Data.Char      (isAsciiUpper)
+import           Data.List      (find, groupBy, sortOn, (\\))
+import           Data.Maybe     (listToMaybe)
+import           ParseUtils
 
 type Element = (String, Int)
 
@@ -94,13 +94,11 @@ findMaxFuelFor cargoOre recipeMap = do
   return $ maxFuelFor cargoOre recipeMap (cargoOre `div` orePerFuel, cargoOre, 0) recipe
 
 inputParser :: ReadP RecipeMap
-inputParser = skipSpaces *> line `sepBy` endOfLine <* skipSpaces <* eof
+inputParser = trimSpacesEOF $ line `sepBy` endOfLine
   where
-    endOfLine = satisfy isControl
     line = flip (,) <$> recipe <*> (skipSpaces *> string "=>" *> element)
     recipe = element `sepBy` char ','
     element = flip (,) <$> (skipSpaces *> integer) <*> (skipSpaces *> code)
-    integer = read <$> munch1 isDigit
     code = munch1 isAsciiUpper
 
 parseInput :: String -> RecipeMap

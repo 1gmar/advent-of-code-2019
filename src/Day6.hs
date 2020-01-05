@@ -3,8 +3,8 @@ module Day6
   , solutionPart2
   ) where
 
-import           Data.Char                    (isAsciiUpper, isControl, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, eof, munch, readP_to_S, satisfy, sepBy, skipSpaces)
+import           Data.Char  (isAsciiUpper, isDigit)
+import           ParseUtils hiding (count)
 
 data OrbitTree =
   SpaceObject String [OrbitTree]
@@ -65,11 +65,10 @@ toTransfers :: SpaceRoute -> [OrbitalTransfer]
 toTransfers route = route `zip` tail route
 
 inputParser :: ReadP OrbitMap
-inputParser = skipSpaces *> line `sepBy` endOfLine <* skipSpaces <* eof
+inputParser = trimSpacesEOF $ line `sepBy` endOfLine
   where
-    endOfLine = satisfy isControl
     line = (,) <$> object <* char ')' <*> object
-    object = munch alphaNumUpper
+    object = munch1 alphaNumUpper
     alphaNumUpper c = isAsciiUpper c || isDigit c
 
 parseInput :: String -> OrbitMap

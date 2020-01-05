@@ -5,11 +5,9 @@ module Day12
   , solutionPart2
   ) where
 
-import           Data.Char                    (isControl, isDigit)
-import           Data.Foldable                (foldl')
-import           Data.List                    (findIndex, foldl1', transpose)
-import           Text.ParserCombinators.ReadP (ReadP, char, count, eof, munch, munch1, readP_to_S, skipSpaces, string,
-                                               (+++))
+import           Data.Foldable (foldl')
+import           Data.List     (findIndex, foldl1', transpose)
+import           ParseUtils
 
 data SpaceD =
   SpaceD
@@ -55,24 +53,19 @@ findStepsForMoonCycle moons = foldl1' lcm <$> stepsPerAxis
     stepsToInvertedDx = findIndex (all (== 0) . fmap dx)
     moonsPerAxis = transpose moons
 
-buildMoonData :: (String, String, String) -> Moon
+buildMoonData :: (Int, Int, Int) -> Moon
 buildMoonData (x, y, z) = [spaceD x, spaceD y, spaceD z]
   where
-    spaceD pos = read pos `SpaceD` 0
+    spaceD pos = SpaceD pos 0
 
 inputParser :: ReadP [Moon]
-inputParser = skipSpaces *> dataLines <* skipSpaces <* eof
+inputParser = trimSpacesEOF $ count 4 (line <* endOfLine)
   where
-    dataLines = count 4 (line <* endOfLine)
-    endOfLine = munch isControl
     line = buildMoonData <$> positionTuple
     positionTuple = (,,) <$> x <*> y <*> z
     x = string "<x=" *> integer <* char ',' <* skipSpaces
     y = string "y=" *> integer <* char ',' <* skipSpaces
     z = string "z=" *> integer <* char '>'
-    integer = positive +++ negative
-    positive = munch1 isDigit
-    negative = char '-' >>= \sign -> (sign :) <$> positive
 
 parseInput :: String -> [Moon]
 parseInput = concatMap fst . readP_to_S inputParser
