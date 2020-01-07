@@ -19,8 +19,6 @@ type Parameter = (ParamMode, Int)
 
 type Operator = Int -> Int -> Int
 
-type Assertion = Int -> Int -> Bool
-
 type Predicate = Int -> Bool
 
 data ParamMode
@@ -29,11 +27,10 @@ data ParamMode
   | Relative
 
 data Operation
-  = Arithmetic Operator
+  = Evaluate Operator
   | Input
   | Output
   | JumpIf Predicate
-  | Test Assertion
   | UpdateRelBase
 
 data ProgramState =
@@ -67,25 +64,28 @@ toParamMode mode =
 toOperation :: Int -> Either String Operation
 toOperation opCode =
   case opCode of
-    1 -> Right $ Arithmetic (+)
-    2 -> Right $ Arithmetic (*)
+    1 -> Right $ Evaluate (+)
+    2 -> Right $ Evaluate (*)
     3 -> Right Input
     4 -> Right Output
     5 -> Right $ JumpIf (/= 0)
     6 -> Right $ JumpIf (== 0)
-    7 -> Right $ Test (<)
-    8 -> Right $ Test (==)
+    7 -> Right $ Evaluate (assert (<))
+    8 -> Right $ Evaluate (assert (==))
     9 -> Right UpdateRelBase
     _ -> Left $ "Unknown operation code: " ++ show opCode
+  where
+    assert condition arg1 arg2
+      | arg1 `condition` arg2 = 1
+      | otherwise = 0
 
 nextIPointer :: Operation -> Int -> Int
 nextIPointer op =
   case op of
-    Arithmetic _  -> (+ 4)
+    Evaluate _    -> (+ 4)
     Input         -> (+ 2)
     Output        -> (+ 2)
     JumpIf _      -> (+ 3)
-    Test _        -> (+ 4)
     UpdateRelBase -> (+ 2)
 
 extraMemory :: [Int] -> Int -> [Int]
@@ -165,32 +165,19 @@ jumpToPointerIf state@ProgramState {..} instr@Instruction {..} predicate =
       | predicate value = paramOf param state {program = prog}
       | otherwise = Right (nextIPointer operation iPointer, prog)
 
-testAssertion :: ProgramState -> Instruction -> Assertion -> ProgramResult
-testAssertion state@ProgramState {..} instr@Instruction {..} predicate =
-  case instr of
-    Instruction _ (p1:p2:p3:_) -> evaluateFor (p1, p2, p3) state nextP test
-    _                          -> illegalProgramState iPointer program
-  where
-    nextP = nextIPointer operation iPointer
-    test arg1 arg2
-      | arg1 `predicate` arg2 = 1
-      | otherwise = 0
-
 computeValue :: ProgramState -> Instruction -> Operator -> ProgramResult
 computeValue state@ProgramState {..} instr@Instruction {..} operator =
   case instr of
-    Instruction _ (p1:p2:p3:_) -> evaluateFor (p1, p2, p3) state nextP operator
+    Instruction _ (p1:p2:p3:_) -> evaluateFor (p1, p2, p3)
     _                          -> illegalProgramState iPointer program
   where
     nextP = nextIPointer operation iPointer
-
-evaluateFor :: (Parameter, Parameter, Parameter) -> ProgramState -> Int -> Operator -> ProgramResult
-evaluateFor (p1, p2, p3) state@ProgramState {..} nextP operator = do
-  (arg1, prog1) <- paramOf p1 state
-  (arg2, prog2) <- paramOf p2 state {program = prog1}
-  let resultP = writeTo p3 relativeBase
-  let finalProg = replaceAt resultP (arg1 `operator` arg2) prog2
-  runIntCodeProgram state {iPointer = nextP, program = finalProg}
+    evaluateFor (p1, p2, p3) = do
+      (arg1, prog1) <- paramOf p1 state
+      (arg2, prog2) <- paramOf p2 state {program = prog1}
+      let resultP = writeTo p3 relativeBase
+      let prog3 = replaceAt resultP (arg1 `operator` arg2) prog2
+      runIntCodeProgram state {iPointer = nextP, program = prog3}
 
 updateRelativeBase :: ProgramState -> Instruction -> ProgramResult
 updateRelativeBase state@ProgramState {..} instr@Instruction {..} =
@@ -211,8 +198,7 @@ runInstruction state instr@Instruction {..} =
     Input            -> readInput state instr
     Output           -> writeOutput state instr
     JumpIf predicate -> jumpToPointerIf state instr predicate
-    Test assert      -> testAssertion state instr assert
-    Arithmetic op    -> computeValue state instr op
+    Evaluate op      -> computeValue state instr op
     UpdateRelBase    -> updateRelativeBase state instr
 
 buildInstruction :: [Int] -> [Int] -> Either String Instruction
