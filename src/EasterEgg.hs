@@ -5,7 +5,7 @@ module EasterEgg
 import           Data.Char      (chr)
 import           IntCodeProgram
 
-getEasterEgg :: [String] -> Either String String
+getEasterEgg :: [Int] -> Either String String
 getEasterEgg = fmap (map chr . output) . runIntCodeProgram . programState
 
 writeEgg :: Either String String -> IO ()

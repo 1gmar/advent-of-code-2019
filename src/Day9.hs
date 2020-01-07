@@ -5,7 +5,7 @@ module Day9
 
 import           IntCodeProgram
 
-runBoostProgram :: [Int] -> [String] -> ProgramResult
+runBoostProgram :: [Int] -> [Int] -> ProgramResult
 runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
 inputFile :: String

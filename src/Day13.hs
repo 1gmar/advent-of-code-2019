@@ -72,7 +72,7 @@ buildGameGrid game = do
   nextState <- runIntCodeProgram $ state game
   collectGridCells game {state = nextState} (output nextState)
 
-startGame :: [String] -> Game
+startGame :: [Int] -> Game
 startGame prog = Game (programState prog) 0 []
 
 choosePaddleCmd :: Game -> Either String Int
@@ -96,8 +96,8 @@ playGame game@(Game currentState _ _)
     let nextState = state nextGame
     playGame (nextGame {state = nextState {input = [paddleCmd], output = []}})
 
-startFreeGame :: [String] -> Game
-startFreeGame prog = Game (programState ("2" : drop 1 prog)) 0 []
+startFreeGame :: [Int] -> Game
+startFreeGame prog = Game (programState (2 : drop 1 prog)) 0 []
 
 printResult :: Either String Int -> IO ()
 printResult (Left err)  = putStrLn $ "Error: " ++ err

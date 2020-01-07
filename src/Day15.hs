@@ -79,7 +79,7 @@ findOxygenMinutes queue = do
   atOxygenDroid <- searchMinPath queue
   spreadOxygen 0 [atOxygenDroid {direction = Center}]
 
-startingQueue :: [String] -> [Droid]
+startingQueue :: [Int] -> [Droid]
 startingQueue prog = [Droid Center 0 (programState prog) Empty]
 
 printResult :: Either String Int -> IO ()

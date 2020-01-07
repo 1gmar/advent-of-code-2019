@@ -12,6 +12,12 @@ data SegmentType
   = Vertical
   | Horizontal
 
+data Direction
+  = UP
+  | DOWN
+  | LEFT
+  | RIGHT
+
 data Segment
   = VSegment
       { x      :: Int
@@ -35,6 +41,14 @@ type StepsCache = [(Point, Int)]
 type DistanceFun = Segment -> Segment -> Maybe Int
 
 type FoldState = (Line, (Point, StepsCache, Int))
+
+toDirection :: Char -> Direction
+toDirection dirChar =
+  case dirChar of
+    'U' -> UP
+    'D' -> DOWN
+    'L' -> LEFT
+    _   -> RIGHT
 
 inRange :: Int -> Range -> Bool
 inRange x (lower, upper)
@@ -62,18 +76,17 @@ minDistance distFun (line1, line2) = (minimum . foldr collect []) line2
     collect segment acc = mapMaybe (distFun segment) (intersectsLine segment) ++ acc
     intersectsLine segment = filter (segment `intersects`) line1
 
-parseLine :: [String] -> Line
+parseLine :: [(Direction, Int)] -> Line
 parseLine = fst . foldl collectSegments ([], ((0, 0), [], 0))
 
-collectSegments :: FoldState -> String -> FoldState
-collectSegments (line, (point, cache, stepCount)) ~(direction:range) =
+collectSegments :: FoldState -> (Direction, Int) -> FoldState
+collectSegments (line, (point, cache, stepCount)) (direction, range) =
   case lookup nPoint cache of
     Just s  -> (nextSegment s : line, (nPoint, cache, s))
     Nothing -> (nextSegment steps : line, (nPoint, (nPoint, steps) : cache, steps))
   where
-    distance = read range
-    steps = stepCount + distance
-    (nPoint, segType) = nextPoint direction point distance
+    steps = stepCount + range
+    (nPoint, segType) = nextPoint direction point range
     nextSegment = buildSegmentFor point nPoint segType
 
 buildSegmentFor :: Point -> Point -> SegmentType -> Int -> Segment
@@ -82,20 +95,20 @@ buildSegmentFor (x0, y0) (x, y) segType steps =
     Vertical   -> VSegment x (y0, y) steps
     Horizontal -> HSegment y (x0, x) steps
 
-nextPoint :: Char -> Point -> Int -> (Point, SegmentType)
+nextPoint :: Direction -> Point -> Int -> (Point, SegmentType)
 nextPoint direction (x, y) distance =
   case direction of
-    'U' -> ((x, y + distance), Vertical)
-    'D' -> ((x, y - distance), Vertical)
-    'L' -> ((x - distance, y), Horizontal)
-    _   -> ((x + distance, y), Horizontal)
+    UP    -> ((x, y + distance), Vertical)
+    DOWN  -> ((x, y - distance), Vertical)
+    LEFT  -> ((x - distance, y), Horizontal)
+    RIGHT -> ((x + distance, y), Horizontal)
 
 inputParser :: ReadP [Line]
 inputParser = trimSpacesEOF $ count 2 (line <* endOfLine)
   where
     line = parseLine <$> segment `sepBy` char ','
-    segment = directionLetter `parseAndAppend` integerStr
-    directionLetter = choice [char 'U', char 'D', char 'L', char 'R']
+    segment = (,) <$> direction <*> integer
+    direction = toDirection <$> choice [char 'U', char 'D', char 'L', char 'R']
 
 parseInput :: String -> [Line]
 parseInput = concatMap fst . readP_to_S inputParser

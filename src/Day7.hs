@@ -10,7 +10,7 @@ import           Data.List        (maximumBy, permutations)
 import           Data.Traversable (for)
 import           IntCodeProgram
 
-type AmpChainRunner = [String] -> [Int] -> ProgramResult
+type AmpChainRunner = [Int] -> [Int] -> ProgramResult
 
 data Amplifier =
   Amplifier
@@ -18,17 +18,12 @@ data Amplifier =
     , softState :: ProgramState
     }
 
-runSimpleChain :: [String] -> [Int] -> ProgramResult
+runSimpleChain :: AmpChainRunner
 runSimpleChain initProg = foldM chainResult (programState initProg)
   where
     chainResult ProgramState {..} phase = runIntCodeProgram $ programWithInput initProg [phase, result]
 
-findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [String] -> ProgramResult
-findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner
-  where
-    compareStates state1 state2 = result state1 `compare` result state2
-
-runLoopModeChain :: [String] -> [Int] -> ProgramResult
+runLoopModeChain :: AmpChainRunner
 runLoopModeChain initProg phaseSetting = loopOver amplifiers
   where
     amplifiers = zipWith buildAmplifier ['A' .. 'E'] phaseSetting
@@ -45,6 +40,11 @@ loopOver (current@(Amplifier code state):next@Amplifier {..}:rest)
     chainResult amp nextState = loopOver (setupNext (result nextState) : rest ++ [amp {softState = nextState}])
     setupNext res = next {softState = inSignal res softState}
     inSignal signal nextState@ProgramState {..} = nextState {input = input ++ [signal]}
+
+findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [Int] -> ProgramResult
+findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner
+  where
+    compareStates state1 state2 = result state1 `compare` result state2
 
 inputFile :: String
 inputFile = "./resources/input-day7.txt"

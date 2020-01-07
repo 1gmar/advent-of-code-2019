@@ -1,9 +1,7 @@
 module ParseUtils
   ( integer
-  , integerStr
   , endOfLine
   , trimSpacesEOF
-  , parseAndAppend
   , module ParserCombinators
   ) where
 
@@ -18,14 +16,11 @@ endOfLine = satisfy isControl
 parseAndAppend :: ReadP a -> ReadP [a] -> ReadP [a]
 parseAndAppend parser list = parser >>= \token -> (token :) <$> list
 
-integerStr :: ReadP String
-integerStr = positive +++ negative
+integer :: ReadP Int
+integer = read <$> positive +++ negative
   where
     positive = munch1 isDigit
     negative = char '-' `parseAndAppend` positive
-
-integer :: ReadP Int
-integer = read <$> integerStr
 
 trimSpacesEOF :: ReadP a -> ReadP a
 trimSpacesEOF parser = skipSpaces *> parser <* skipSpaces <* eof

@@ -5,7 +5,7 @@ module Day5
 
 import           IntCodeProgram
 
-runDiagnosticProgram :: [Int] -> [String] -> ProgramResult
+runDiagnosticProgram :: [Int] -> [Int] -> ProgramResult
 runDiagnosticProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
 inputFile :: String

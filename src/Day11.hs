@@ -101,7 +101,7 @@ paintShip robot@Robot {..}
         [nextColor, nextDirection] -> Right (nextColor, nextDirection)
         _                          -> Left $ "Incompatible output data: " ++ show out
 
-runPaintingRobot :: Color -> [String] -> Either String Robot
+runPaintingRobot :: Color -> [Int] -> Either String Robot
 runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
   where
     soft = programState prog
