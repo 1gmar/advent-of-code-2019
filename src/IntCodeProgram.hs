@@ -119,8 +119,8 @@ paramOf :: Parameter -> ProgramState -> Either String (Int, [Int])
 paramOf (mode, param) ProgramState {..} =
   case mode of
     Immediate -> Right (param, program)
-    Position  -> program `elemAt` param >>= Right
-    Relative  -> program `elemAt` (relativeBase + param) >>= Right
+    Position  -> program `elemAt` param
+    Relative  -> program `elemAt` (relativeBase + param)
 
 writeTo :: Parameter -> Int -> Int
 writeTo (Relative, resultP) relBase = resultP + relBase
