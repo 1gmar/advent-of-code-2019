@@ -1,6 +1,7 @@
 module Day1
   ( solutionPart1
   , solutionPart2
+  , readInput
   ) where
 
 import           ParseUtils
@@ -22,11 +23,11 @@ inputParser = trimSpacesEOF $ integer `sepBy` endOfLine
 parseInput :: String -> [Int]
 parseInput = concatMap fst . readP_to_S inputParser
 
-readInput :: IO [Int]
-readInput = parseInput <$> readFile "./resources/input-day1.txt"
+readInput :: IO String
+readInput = readFile "./resources/input-day1.txt"
 
-solutionPart1 :: IO Int
-solutionPart1 = sumFuelMass <$> readInput
+solutionPart1 :: String -> Int
+solutionPart1 = sumFuelMass . parseInput
 
-solutionPart2 :: IO Int
-solutionPart2 = sumTotalFuelMass <$> readInput
+solutionPart2 :: String -> Int
+solutionPart2 = sumTotalFuelMass . parseInput

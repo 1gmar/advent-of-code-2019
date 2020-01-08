@@ -1,1 +1,1 @@
---command="stack ghci --pedantic"
+--command="stack ghci --ghci-options=-isrc --pedantic --test advent-of-code:test:advent-of-code-test"

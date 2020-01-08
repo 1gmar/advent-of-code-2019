@@ -1,2 +1,4 @@
+import qualified Day1Spec as Day1
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = putStrLn " Running AoC tests:" >> Day1.runTests

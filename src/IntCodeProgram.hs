@@ -10,7 +10,8 @@ module IntCodeProgram
   , programWithInput
   ) where
 
-import           Data.List  (find, unfoldr)
+import           Data.Bifunctor (bimap)
+import           Data.List      (find, unfoldr)
 import           ParseUtils
 
 type ProgramResult = Either String ProgramState
@@ -182,12 +183,12 @@ computeValue state@ProgramState {..} instr@Instruction {..} operator =
 updateRelativeBase :: ProgramState -> Instruction -> ProgramResult
 updateRelativeBase state@ProgramState {..} instr@Instruction {..} =
   case instr of
-    Instruction _ (param:_) -> paramOf param state >>= updateBase >>= continueProgram
+    Instruction _ (param:_) -> paramOf param state >>= runIntCodeProgram . updateBase
     _                       -> illegalProgramState iPointer program
   where
     nextP = nextIPointer operation iPointer
-    updateBase (value, prog) = Right (relativeBase + value, prog)
-    continueProgram (base, prog) = runIntCodeProgram state {iPointer = nextP, program = prog, relativeBase = base}
+    updateBase = nextState . bimap (+ relativeBase) id
+    nextState (base, prog) = state {iPointer = nextP, program = prog, relativeBase = base}
 
 illegalProgramState :: Int -> [Int] -> ProgramResult
 illegalProgramState iPointer program = Left $ "Illegal program state at: " ++ show (iPointer, program)
