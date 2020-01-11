@@ -36,11 +36,8 @@ showResult :: Either String Int -> String
 showResult (Left err)  = "Error: " ++ err
 showResult (Right res) = show res
 
-inputFile :: String
-inputFile = "./resources/input-day2.txt"
+solutionPart1 :: String -> String
+solutionPart1 = showResult . runGravityAssistProgram . parseInput
 
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showResult . runGravityAssistProgram
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= putStrLn . showResult . fmap nounVerbChecksum . findInputPairFor 19690720
+solutionPart2 :: String -> String
+solutionPart2 = showResult . fmap nounVerbChecksum . findInputPairFor 19690720 . parseInput

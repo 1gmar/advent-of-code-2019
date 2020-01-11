@@ -8,6 +8,7 @@ module IntCodeProgram
   , showResult
   , programState
   , programWithInput
+  , parseInput
   ) where
 
 import           Data.Bifunctor (bimap)

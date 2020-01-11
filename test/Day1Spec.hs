@@ -2,27 +2,24 @@ module Day1Spec
   ( runTests
   ) where
 
+import           AssertUtils
 import           Day1
 
-assert :: (String -> Int) -> String -> Int -> IO ()
-assert solution input expected
-  | result == expected = putStrLn $ "Passed for " ++ show input
-  | otherwise =
-    putStrLn $ concat ["Failed: expected: ", show expected, ", but got: ", show result, ", for input: ", show input]
-  where
-    result = solution input
+realInput :: String
+realInput = "./resources/input-day1.txt"
 
 runTests :: IO ()
-runTests = do
-  putStrLn "Day 1 test suite:"
-  putStrLn "Part 1:"
-  assert solutionPart1 "12" 2
-  assert solutionPart1 "14" 2
-  assert solutionPart1 "1969" 654
-  assert solutionPart1 "100756" 33583
-  readInput >>= flip (assert solutionPart1) 3423511
-  putStrLn "Part 2:"
-  assert solutionPart2 "14" 2
-  assert solutionPart2 "1969" 966
-  assert solutionPart2 "100756" 50346
-  readInput >>= flip (assert solutionPart2) 5132379
+runTests =
+  runAssertions
+    1
+    [ AssertData Raw solutionPart1 "12" 2
+    , AssertData Raw solutionPart1 "14" 2
+    , AssertData Raw solutionPart1 "1969" 654
+    , AssertData Raw solutionPart1 "100756" 33583
+    , AssertData File solutionPart1 realInput 3423511
+    ]
+    [ AssertData Raw solutionPart2 "14" 2
+    , AssertData Raw solutionPart2 "1969" 966
+    , AssertData Raw solutionPart2 "100756" 50346
+    , AssertData File solutionPart2 realInput 5132379
+    ]
