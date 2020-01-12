@@ -71,7 +71,7 @@ stepDistance vs@VSegment {..} hs@HSegment {..}               = stepDistance hs v
 stepDistance _ _                                             = Nothing
 
 minDistance :: DistanceFun -> (Line, Line) -> Int
-minDistance distFun (line1, line2) = (minimum . foldr collect []) line2
+minDistance distFun (line1, line2) = (minimum . filter (/= 0) . foldr collect []) line2
   where
     collect segment acc = mapMaybe (distFun segment) (intersectsLine segment) ++ acc
     intersectsLine segment = filter (segment `intersects`) line1
@@ -113,17 +113,14 @@ inputParser = trimSpacesEOF $ count 2 (line <* endOfLine)
 parseInput :: String -> [Line]
 parseInput = concatMap fst . readP_to_S inputParser
 
-readInput :: IO [Line]
-readInput = parseInput <$> readFile "./resources/input-day3.txt"
-
-linesToTuple :: [Line] -> Maybe (Line, Line)
-linesToTuple input =
+maybeTwoLines :: [Line] -> Maybe (Line, Line)
+maybeTwoLines input =
   case input of
     [line1, line2] -> Just (line1, line2)
     _              -> Nothing
 
-solutionPart1 :: IO (Maybe Int)
-solutionPart1 = fmap (minDistance manhattanDistance) . linesToTuple <$> readInput
+solutionPart1 :: String -> Maybe Int
+solutionPart1 = fmap (minDistance manhattanDistance) . maybeTwoLines . parseInput
 
-solutionPart2 :: IO (Maybe Int)
-solutionPart2 = fmap (minDistance stepDistance) . linesToTuple <$> readInput
+solutionPart2 :: String -> Maybe Int
+solutionPart2 = fmap (minDistance stepDistance) . maybeTwoLines . parseInput

@@ -1,4 +1,4 @@
-module Day1Spec
+module Day1Test
   ( runTests
   ) where
 

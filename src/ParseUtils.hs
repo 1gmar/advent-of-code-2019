@@ -7,8 +7,8 @@ module ParseUtils
 
 import           Data.Char                    (isControl, isDigit)
 import           Text.ParserCombinators.ReadP as ParserCombinators (ReadP, char, choice, count, eof, many1, munch1,
-                                                                    readP_to_S, satisfy, sepBy, skipSpaces, string,
-                                                                    (+++))
+                                                                    optional, readP_to_S, satisfy, sepBy, skipSpaces,
+                                                                    string, (+++))
 
 endOfLine :: ReadP Char
 endOfLine = satisfy isControl

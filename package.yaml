@@ -38,7 +38,7 @@ executables:
 
 tests:
   advent-of-code-test:
-    main:                Spec.hs
+    main:                MainTest.hs
     source-dirs:         test
     ghc-options:
     - -threaded
