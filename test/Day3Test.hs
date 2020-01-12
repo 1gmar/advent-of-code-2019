@@ -21,13 +21,13 @@ runTests :: IO ()
 runTests =
   runAssertions
     3
-    [ AssertData Raw solutionPart1 (unlines testCase1) (Just 6)
-    , AssertData Raw solutionPart1 (unlines testCase2) (Just 159)
-    , AssertData Raw solutionPart1 (unlines testCase3) (Just 135)
-    , AssertData File solutionPart1 realInput (Just 293)
+    [ Assertion (Raw solutionPart1 (unlines testCase1)) (Just 6)
+    , Assertion (Raw solutionPart1 (unlines testCase2)) (Just 159)
+    , Assertion (Raw solutionPart1 (unlines testCase3)) (Just 135)
+    , Assertion (File solutionPart1 realInput) (Just 293)
     ]
-    [ AssertData Raw solutionPart2 (unlines testCase1) (Just 30)
-    , AssertData Raw solutionPart2 (unlines testCase2) (Just 610)
-    , AssertData Raw solutionPart2 (unlines testCase3) (Just 410)
-    , AssertData File solutionPart2 realInput (Just 27306)
+    [ Assertion (Raw solutionPart2 (unlines testCase1)) (Just 30)
+    , Assertion (Raw solutionPart2 (unlines testCase2)) (Just 610)
+    , Assertion (Raw solutionPart2 (unlines testCase3)) (Just 410)
+    , Assertion (File solutionPart2 realInput) (Just 27306)
     ]

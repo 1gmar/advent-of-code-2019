@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module AssertUtils
-  ( AssertData(..)
-  , InputType(..)
+  ( Assertion(..)
+  , Source(..)
   , runAssertions
   ) where
 
@@ -11,34 +11,38 @@ import           Control.Monad     (void)
 
 type Day = Int
 
-data InputType
-  = Raw
-  | File
+data Source a b
+  = File (String -> b) String
+  | Raw (a -> b) a
 
-data AssertData a =
-  AssertData
-    { inputType :: InputType
-    , solution  :: String -> a
-    , input     :: String
-    , expected  :: a
+instance (Show a, Show b) => Show (Source a b) where
+  show (File _ file) = file
+  show (Raw _ input) = show input
+
+data Assertion a b =
+  Assertion
+    { source   :: Source a b
+    , expected :: b
     }
 
-assert :: (Eq a, Show a) => AssertData a -> IO ()
-assert AssertData {..} = do
-  result <- solution <$> inputData
-  putStrLn $ "Test Case: \n" ++ input
+solution :: Source a b -> IO b
+solution source =
+  case source of
+    File f file -> f <$> readFile file
+    Raw f input -> pure (f input)
+
+assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
+assert Assertion {..} = do
+  result <- solution source
+  putStrLn $ "Test Case:\n" ++ show source
   reportTestResult result
   where
     errorMsg result = concat ["Failed: expected: ", show expected, ", but got: ", show result]
-    inputData =
-      case inputType of
-        File -> readFile input
-        Raw  -> pure input
     reportTestResult result
       | result == expected = putStrLn "Passed!\n"
       | otherwise = void $ throwIO $ AssertionFailed (errorMsg result)
 
-runAssertions :: (Eq a, Show a) => Day -> [AssertData a] -> [AssertData a] -> IO ()
+runAssertions :: (Eq b, Show a, Show b) => Day -> [Assertion a b] -> [Assertion a b] -> IO ()
 runAssertions day part1Assertions part2Assertions = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"

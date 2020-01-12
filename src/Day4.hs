@@ -5,9 +5,6 @@ module Day4
 
 import           Data.List (group)
 
-inputRange :: (Int, Int)
-inputRange = (134792, 675810)
-
 generatePasswords :: (Int, Int) -> [Int -> Bool] -> [Int]
 generatePasswords (lower, upper) criteria = [pass | pass <- [lower .. upper], all (\crit -> crit pass) criteria]
 
@@ -19,8 +16,8 @@ increasingDigits = and . snd . foldl currentDigitGTE ('0', []) . show
 adjacentDuplicate :: (Int -> Bool) -> Int -> Bool
 adjacentDuplicate criteria = any criteria . map length . group . show
 
-solutionPart1 :: Int
-solutionPart1 = (length . generatePasswords inputRange) [increasingDigits, adjacentDuplicate (> 1)]
+solutionPart1 :: (Int, Int) -> Int
+solutionPart1 inputRange = (length . generatePasswords inputRange) [increasingDigits, adjacentDuplicate (> 1)]
 
-solutionPart2 :: Int
-solutionPart2 = (length . generatePasswords inputRange) [increasingDigits, adjacentDuplicate (== 2)]
+solutionPart2 :: (Int, Int) -> Int
+solutionPart2 inputRange = (length . generatePasswords inputRange) [increasingDigits, adjacentDuplicate (== 2)]
