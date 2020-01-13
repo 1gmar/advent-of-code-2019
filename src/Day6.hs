@@ -74,11 +74,8 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
 parseInput :: String -> OrbitMap
 parseInput = concatMap fst . readP_to_S inputParser
 
-readInput :: IO OrbitMap
-readInput = parseInput <$> readFile "./resources/input-day6.txt"
+solutionPart1 :: String -> Int
+solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" . parseInput
 
-solutionPart1 :: IO Int
-solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" <$> readInput
-
-solutionPart2 :: IO Int
-solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . flip buildOrbitTree "COM" <$> readInput
+solutionPart2 :: String -> Int
+solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . flip buildOrbitTree "COM" . parseInput
