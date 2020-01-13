@@ -8,11 +8,8 @@ import           IntCodeProgram
 runDiagnosticProgram :: [Int] -> [Int] -> ProgramResult
 runDiagnosticProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
-inputFile :: String
-inputFile = "./resources/input-day5.txt"
+solutionPart1 :: String -> String
+solutionPart1 = showResult . runDiagnosticProgram [1] . parseInput
 
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showResult . runDiagnosticProgram [1]
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= putStrLn . showResult . runDiagnosticProgram [5]
+solutionPart2 :: String -> String
+solutionPart2 = showResult . runDiagnosticProgram [5] . parseInput

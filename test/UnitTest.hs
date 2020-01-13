@@ -1,21 +1,20 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module AssertUtils
+module UnitTest
   ( Assertion(..)
   , Source(..)
-  , runAssertions
+  , DayTest(..)
+  , runTest
   ) where
 
 import           Control.Exception (AssertionFailed (..), throwIO)
 import           Control.Monad     (void)
 
-type Day = Int
-
 data Source a b
   = File (String -> b) String
   | Raw (a -> b) a
 
-instance (Show a, Show b) => Show (Source a b) where
+instance Show a => Show (Source a b) where
   show (File _ file) = file
   show (Raw _ input) = show input
 
@@ -23,6 +22,12 @@ data Assertion a b =
   Assertion
     { source   :: Source a b
     , expected :: b
+    }
+
+data DayTest a b =
+  DayTest
+    { day       :: Int
+    , testCases :: ([Assertion a b], [Assertion a b])
     }
 
 solution :: Source a b -> IO b
@@ -33,19 +38,19 @@ solution source =
 
 assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
 assert Assertion {..} = do
-  result <- solution source
   putStrLn $ "Test Case:\n" ++ show source
+  result <- solution source
   reportTestResult result
   where
-    errorMsg result = concat ["Failed: expected: ", show expected, ", but got: ", show result]
+    errorMsg result = concat ["AssertionFailed: expected: ", show expected, ", but got: ", show result]
     reportTestResult result
       | result == expected = putStrLn "Passed!\n"
       | otherwise = void $ throwIO $ AssertionFailed (errorMsg result)
 
-runAssertions :: (Eq b, Show a, Show b) => Day -> [Assertion a b] -> [Assertion a b] -> IO ()
-runAssertions day part1Assertions part2Assertions = do
+runTest :: (Eq b, Show a, Show b) => DayTest a b -> IO ()
+runTest DayTest {..} = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"
-  mapM_ assert part1Assertions
+  mapM_ assert (fst testCases)
   putStrLn "Part 2:\n"
-  mapM_ assert part2Assertions
+  mapM_ assert (snd testCases)

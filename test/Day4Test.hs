@@ -1,13 +1,15 @@
 module Day4Test
-  ( runTests
+  ( test
   ) where
 
-import           AssertUtils
 import           Day4
+import           UnitTest
 
-runTests :: IO ()
-runTests =
-  runAssertions
-    4
-    [Assertion (Raw solutionPart1 (134792, 675810)) 1955]
-    [Assertion (Raw solutionPart2 (134792, 675810)) 1319]
+test :: IO ()
+test =
+  runTest
+    DayTest
+      { day = 4
+      , testCases =
+          ([Assertion (Raw solutionPart1 (134792, 675810)) 1955], [Assertion (Raw solutionPart2 (134792, 675810)) 1319])
+      }
