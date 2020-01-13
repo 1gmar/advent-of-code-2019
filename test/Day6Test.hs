@@ -20,6 +20,6 @@ test =
     DayTest
       { day = 6
       , testCases =
-          ( [Assertion (Raw solutionPart1 testCase1) 42, Assertion (File solutionPart1 realInput) 314247]
-          , [Assertion (Raw solutionPart2 testCase2) 4, Assertion (File solutionPart2 realInput) 514])
+          ( [Assertion (Constant solutionPart1 testCase1) 42, Assertion (File solutionPart1 realInput) 314247]
+          , [Assertion (Constant solutionPart2 testCase2) 4, Assertion (File solutionPart2 realInput) 514])
       }

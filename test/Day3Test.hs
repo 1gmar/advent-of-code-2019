@@ -23,14 +23,14 @@ test =
     DayTest
       { day = 3
       , testCases =
-          ( [ Assertion (Raw solutionPart1 testCase1) (Just 6)
-            , Assertion (Raw solutionPart1 testCase2) (Just 159)
-            , Assertion (Raw solutionPart1 testCase3) (Just 135)
+          ( [ Assertion (Constant solutionPart1 testCase1) (Just 6)
+            , Assertion (Constant solutionPart1 testCase2) (Just 159)
+            , Assertion (Constant solutionPart1 testCase3) (Just 135)
             , Assertion (File solutionPart1 realInput) (Just 293)
             ]
-          , [ Assertion (Raw solutionPart2 testCase1) (Just 30)
-            , Assertion (Raw solutionPart2 testCase2) (Just 610)
-            , Assertion (Raw solutionPart2 testCase3) (Just 410)
+          , [ Assertion (Constant solutionPart2 testCase1) (Just 30)
+            , Assertion (Constant solutionPart2 testCase2) (Just 610)
+            , Assertion (Constant solutionPart2 testCase3) (Just 410)
             , Assertion (File solutionPart2 realInput) (Just 27306)
             ])
       }

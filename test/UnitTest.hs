@@ -12,11 +12,11 @@ import           Control.Monad     (void)
 
 data Source a b
   = File (String -> b) String
-  | Raw (a -> b) a
+  | Constant (a -> b) a
 
 instance Show a => Show (Source a b) where
-  show (File _ file) = file
-  show (Raw _ input) = show input
+  show (File _ file)      = file
+  show (Constant _ input) = show input
 
 data Assertion a b =
   Assertion
@@ -33,8 +33,8 @@ data DayTest a b =
 solution :: Source a b -> IO b
 solution source =
   case source of
-    File f file -> f <$> readFile file
-    Raw f input -> pure (f input)
+    File f file      -> f <$> readFile file
+    Constant f input -> pure (f input)
 
 assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
 assert Assertion {..} = do

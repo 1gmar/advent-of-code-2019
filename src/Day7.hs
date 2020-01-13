@@ -46,13 +46,8 @@ findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for 
   where
     compareStates state1 state2 = result state1 `compare` result state2
 
-inputFile :: String
-inputFile = "./resources/input-day7.txt"
+solutionPart1 :: String -> String
+solutionPart1 = showResult . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4]) . parseInput
 
-solutionPart1 :: IO ()
-solutionPart1 =
-  readInputData inputFile >>= putStrLn . showResult . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4])
-
-solutionPart2 :: IO ()
-solutionPart2 =
-  readInputData inputFile >>= putStrLn . showResult . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9])
+solutionPart2 :: String -> String
+solutionPart2 = showResult . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9]) . parseInput
