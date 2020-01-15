@@ -14,15 +14,16 @@ test =
     DayTest
       { day = 1
       , testCases =
-          ( [ Assertion (Constant solutionPart1 "12") 2
-            , Assertion (Constant solutionPart1 "14") 2
-            , Assertion (Constant solutionPart1 "1969") 654
-            , Assertion (Constant solutionPart1 "100756") 33583
-            , Assertion (File solutionPart1 realInput) 3423511
+          ( [ Assertion (Constant "12") solutionPart1 2
+            , Assertion (Constant "14") solutionPart1 2
+            , Assertion (Constant "1969") solutionPart1 654
+            , Assertion (Constant "100756") solutionPart1 33583
+            , Assertion (fileInput realInput) solutionPart1 3423511
             ]
-          , [ Assertion (Constant solutionPart2 "14") 2
-            , Assertion (Constant solutionPart2 "1969") 966
-            , Assertion (Constant solutionPart2 "100756") 50346
-            , Assertion (File solutionPart2 realInput) 5132379
+          , [ Assertion (Constant "12") solutionPart2 2
+            , Assertion (Constant "14") solutionPart2 2
+            , Assertion (Constant "1969") solutionPart2 966
+            , Assertion (Constant "100756") solutionPart2 50346
+            , Assertion (fileInput realInput) solutionPart2 5132379
             ])
       }

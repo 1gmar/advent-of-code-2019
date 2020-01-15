@@ -2,25 +2,27 @@
 
 module UnitTest
   ( Assertion(..)
-  , Source(..)
+  , Input(Constant)
   , DayTest(..)
   , runTest
+  , fileInput
   ) where
 
 import           Control.Exception (AssertionFailed (..), throwIO)
 import           Control.Monad     (void)
 
-data Source a b
-  = File (String -> b) String
-  | Constant (a -> b) a
+data Input a
+  = File String (IO a)
+  | Constant a
 
-instance Show a => Show (Source a b) where
-  show (File _ file)      = file
-  show (Constant _ input) = show input
+instance Show a => Show (Input a) where
+  show (File file _)       = file
+  show (Constant constant) = show constant
 
 data Assertion a b =
   Assertion
-    { source   :: Source a b
+    { input    :: Input a
+    , run      :: a -> b
     , expected :: b
     }
 
@@ -30,16 +32,19 @@ data DayTest a b =
     , testCases :: ([Assertion a b], [Assertion a b])
     }
 
-solution :: Source a b -> IO b
-solution source =
-  case source of
-    File f file      -> f <$> readFile file
-    Constant f input -> pure (f input)
+fileInput :: String -> Input String
+fileInput file = File file (readFile file)
+
+apply :: (a -> b) -> Input a -> IO b
+apply f input =
+  case input of
+    File _ inputIO    -> f <$> inputIO
+    Constant constant -> pure (f constant)
 
 assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
 assert Assertion {..} = do
-  putStrLn $ "Test Case:\n" ++ show source
-  result <- solution source
+  putStrLn $ "Test Case:\n" ++ show input
+  result <- run `apply` input
   reportTestResult result
   where
     errorMsg result = concat ["AssertionFailed: expected: ", show expected, ", but got: ", show result]

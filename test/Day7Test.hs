@@ -38,13 +38,13 @@ test =
     DayTest
       { day = 7
       , testCases =
-          ( [ Assertion (Constant solutionPart1 testCase1) "43210"
-            , Assertion (Constant solutionPart1 testCase2) "54321"
-            , Assertion (Constant solutionPart1 testCase3) "65210"
-            , Assertion (File solutionPart1 realInput) "255590"
+          ( [ Assertion (Constant testCase1) solutionPart1 "43210"
+            , Assertion (Constant testCase2) solutionPart1 "54321"
+            , Assertion (Constant testCase3) solutionPart1 "65210"
+            , Assertion (fileInput realInput) solutionPart1 "255590"
             ]
-          , [ Assertion (Constant solutionPart2 testCase4) "139629729"
-            , Assertion (Constant solutionPart2 testCase5) "18216"
-            , Assertion (File solutionPart2 realInput) "58285150"
+          , [ Assertion (Constant testCase4) solutionPart2 "139629729"
+            , Assertion (Constant testCase5) solutionPart2 "18216"
+            , Assertion (fileInput realInput) solutionPart2 "58285150"
             ])
       }

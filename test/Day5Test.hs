@@ -20,15 +20,15 @@ test =
     DayTest
       { day = 5
       , testCases =
-          ( [ Assertion (Constant solutionPart1 "3,9,8,9,10,9,4,9,99,-1,8") "0"
-            , Assertion (Constant solutionPart1 "3,9,7,9,10,9,4,9,99,-1,8") "1"
-            , Assertion (Constant solutionPart1 "3,3,1108,-1,8,3,4,3,99") "0"
-            , Assertion (Constant solutionPart1 "3,3,1107,-1,8,3,4,3,99") "1"
-            , Assertion (File solutionPart1 realInput) "15386262"
+          ( [ Assertion (Constant "3,9,8,9,10,9,4,9,99,-1,8") solutionPart1 "0"
+            , Assertion (Constant "3,9,7,9,10,9,4,9,99,-1,8") solutionPart1 "1"
+            , Assertion (Constant "3,3,1108,-1,8,3,4,3,99") solutionPart1 "0"
+            , Assertion (Constant "3,3,1107,-1,8,3,4,3,99") solutionPart1 "1"
+            , Assertion (fileInput realInput) solutionPart1 "15386262"
             ]
-          , [ Assertion (Constant solutionPart2 "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9") "1"
-            , Assertion (Constant solutionPart2 "3,3,1105,-1,9,1101,0,0,12,4,12,99,1") "1"
-            , Assertion (Constant solutionPart2 testCase) "999"
-            , Assertion (File solutionPart2 realInput) "10376124"
+          , [ Assertion (Constant "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9") solutionPart2 "1"
+            , Assertion (Constant "3,3,1105,-1,9,1101,0,0,12,4,12,99,1") solutionPart2 "1"
+            , Assertion (Constant testCase) solutionPart2 "999"
+            , Assertion (fileInput realInput) solutionPart2 "10376124"
             ])
       }
