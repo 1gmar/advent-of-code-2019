@@ -19,11 +19,8 @@ sumTotalFuelMass = sum . fuelAwareMassValues
 inputParser :: ReadP [Int]
 inputParser = trimSpacesEOF $ integer `sepBy` endOfLine
 
-parseInput :: String -> [Int]
-parseInput = concatMap fst . readP_to_S inputParser
-
 solutionPart1 :: String -> Int
-solutionPart1 = sumFuelMass . parseInput
+solutionPart1 = sumFuelMass . parseInput inputParser
 
 solutionPart2 :: String -> Int
-solutionPart2 = sumTotalFuelMass . parseInput
+solutionPart2 = sumTotalFuelMass . parseInput inputParser

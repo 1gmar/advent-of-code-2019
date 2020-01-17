@@ -8,7 +8,7 @@ module IntCodeProgram
   , showResult
   , programState
   , programWithInput
-  , parseInput
+  , parseIntCode
   ) where
 
 import           Data.Bifunctor (bimap)
@@ -239,11 +239,11 @@ runIntCodeProgram state@ProgramState {..}
 inputParser :: ReadP [Int]
 inputParser = trimSpacesEOF $ integer `sepBy` char ','
 
-parseInput :: String -> [Int]
-parseInput = concatMap fst . readP_to_S inputParser
+parseIntCode :: String -> [Int]
+parseIntCode = parseInput inputParser
 
 readInputData :: String -> IO [Int]
-readInputData file = parseInput <$> readFile file
+readInputData file = parseInput inputParser <$> readFile file
 
 showResult :: ProgramResult -> String
 showResult progResult =

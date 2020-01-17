@@ -101,11 +101,8 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
     element = flip (,) <$> (skipSpaces *> integer) <*> (skipSpaces *> code)
     code = munch1 isAsciiUpper
 
-parseInput :: String -> RecipeMap
-parseInput = concatMap fst . readP_to_S inputParser
-
 readInput :: IO RecipeMap
-readInput = parseInput <$> readFile "./resources/input-day14.txt"
+readInput = parseInput inputParser <$> readFile "./resources/input-day14.txt"
 
 solutionPart1 :: IO (Maybe Int)
 solutionPart1 = computeMinCost <$> readInput

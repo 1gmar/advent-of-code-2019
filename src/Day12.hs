@@ -67,11 +67,8 @@ inputParser = trimSpacesEOF $ count 4 (line <* endOfLine)
     y = string "y=" *> integer <* char ',' <* skipSpaces
     z = string "z=" *> integer <* char '>'
 
-parseInput :: String -> [Moon]
-parseInput = concatMap fst . readP_to_S inputParser
-
 readInput :: IO [Moon]
-readInput = parseInput <$> readFile "./resources/input-day12.txt"
+readInput = parseInput inputParser <$> readFile "./resources/input-day12.txt"
 
 solutionPart1 :: IO Int
 solutionPart1 = computeTotalEnergy . stepNTimes 1000 <$> readInput

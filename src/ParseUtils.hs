@@ -2,6 +2,7 @@ module ParseUtils
   ( integer
   , endOfLine
   , trimSpacesEOF
+  , parseInput
   , module ParserCombinators
   ) where
 
@@ -24,3 +25,6 @@ integer = read <$> positive +++ negative
 
 trimSpacesEOF :: ReadP a -> ReadP a
 trimSpacesEOF parser = skipSpaces *> parser <* skipSpaces <* eof
+
+parseInput :: ReadP [a] -> String -> [a]
+parseInput inputParser = concatMap fst . readP_to_S inputParser

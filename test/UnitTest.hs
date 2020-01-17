@@ -2,57 +2,57 @@
 
 module UnitTest
   ( Assertion(..)
-  , Input(Constant)
+  , Source(Constant)
   , DayTest(..)
   , runTest
-  , fileInput
+  , fileSource
   ) where
 
 import           Control.Exception (AssertionFailed (..), throwIO)
 import           Control.Monad     (void)
 
-data Input a
+data Source a
   = File String (IO a)
   | Constant a
 
-instance Show a => Show (Input a) where
+instance Show a => Show (Source a) where
   show (File file _)       = file
   show (Constant constant) = show constant
 
 data Assertion a b =
   Assertion
-    { input    :: Input a
+    { input    :: Source a
     , run      :: a -> b
-    , expected :: b
+    , expected :: Source b
     }
 
-data DayTest a b =
+data DayTest a b c =
   DayTest
     { day       :: Int
-    , testCases :: ([Assertion a b], [Assertion a b])
+    , testCases :: ([Assertion a b], [Assertion a c])
     }
 
-fileInput :: String -> Input String
-fileInput file = File file (readFile file)
+fileSource :: String -> Source String
+fileSource file = File file (readFile file)
 
-apply :: (a -> b) -> Input a -> IO b
-apply f input =
-  case input of
-    File _ inputIO    -> f <$> inputIO
-    Constant constant -> pure (f constant)
+readSource :: Source a -> IO a
+readSource source =
+  case source of
+    File _ sourceIO   -> sourceIO
+    Constant constant -> pure constant
 
 assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
 assert Assertion {..} = do
   putStrLn $ "Test Case:\n" ++ show input
-  result <- run `apply` input
-  reportTestResult result
+  result <- run <$> readSource input
+  (result `shouldBe`) =<< readSource expected
   where
     errorMsg result = concat ["AssertionFailed: expected: ", show expected, ", but got: ", show result]
-    reportTestResult result
-      | result == expected = putStrLn "Passed!\n"
+    shouldBe result expect
+      | result == expect = putStrLn "Passed!\n"
       | otherwise = void $ throwIO $ AssertionFailed (errorMsg result)
 
-runTest :: (Eq b, Show a, Show b) => DayTest a b -> IO ()
+runTest :: (Eq b, Eq c, Show a, Show b, Show c) => DayTest a b c -> IO ()
 runTest DayTest {..} = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"

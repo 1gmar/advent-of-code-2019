@@ -71,11 +71,8 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
     object = munch1 alphaNumUpper
     alphaNumUpper c = isAsciiUpper c || isDigit c
 
-parseInput :: String -> OrbitMap
-parseInput = concatMap fst . readP_to_S inputParser
-
 solutionPart1 :: String -> Int
-solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" . parseInput
+solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" . parseInput inputParser
 
 solutionPart2 :: String -> Int
-solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . flip buildOrbitTree "COM" . parseInput
+solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . flip buildOrbitTree "COM" . parseInput inputParser

@@ -47,7 +47,7 @@ findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for 
     compareStates state1 state2 = result state1 `compare` result state2
 
 solutionPart1 :: String -> String
-solutionPart1 = showResult . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4]) . parseInput
+solutionPart1 = showResult . findMaxPossibleSignal runSimpleChain (permutations [0 .. 4]) . parseIntCode
 
 solutionPart2 :: String -> String
-solutionPart2 = showResult . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9]) . parseInput
+solutionPart2 = showResult . findMaxPossibleSignal runLoopModeChain (permutations [5 .. 9]) . parseIntCode

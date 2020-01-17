@@ -57,25 +57,21 @@ readImage :: [Pixel] -> Image
 readImage []      = []
 readImage rawData = take layerLength rawData : readImage (drop layerLength rawData)
 
-inputParser :: ReadP String
+inputParser :: ReadP [Pixel]
 inputParser = trimSpacesEOF digits
   where
-    digits = many1 $ choice [char '0', char '1', char '2']
-
-parseInput :: String -> [Pixel]
-parseInput = map readColor . concatMap fst . readP_to_S inputParser
-  where
+    digits = many1 $ readColor <$> choice [char '0', char '1', char '2']
     readColor digit =
       case digit of
         '0' -> White
         '1' -> Black
         _   -> Transparent
 
-readInput :: IO Image
-readInput = readImage . parseInput <$> readFile "./resources/input-day8.txt"
+parsePixels :: String -> Image
+parsePixels = readImage . parseInput inputParser
 
-solutionPart1 :: IO Int
-solutionPart1 = blackTimesTransparent . layerWithMinWhite <$> readInput
+solutionPart1 :: String -> Int
+solutionPart1 = blackTimesTransparent . layerWithMinWhite . parsePixels
 
-solutionPart2 :: IO ()
-solutionPart2 = readInput >>= writeFile "./out/output-day8.txt" . showLayer . zipImageLayers
+solutionPart2 :: String -> String
+solutionPart2 = showLayer . zipImageLayers . parsePixels

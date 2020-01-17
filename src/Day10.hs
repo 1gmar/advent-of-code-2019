@@ -85,10 +85,10 @@ inputParser = trimSpacesEOF $ rows `sepBy` endOfLine
     readCell '#' = Asteroid
     readCell _   = Empty
 
-parseInput :: String -> AsteroidMap
-parseInput input = concatRows rows
+parseAsteroids :: String -> AsteroidMap
+parseAsteroids input = concatRows rows
   where
-    rows = (concatMap fst . readP_to_S inputParser) input
+    rows = parseInput inputParser input
     width = rowSize rows
     concatRows = fst . foldl (collectAsteroids width) ([], 0) . concat
     rowSize []      = 0
@@ -103,7 +103,7 @@ collectAsteroids width (asteroids, index) cell =
         Empty    -> (asteroids, index + 1)
 
 readInput :: IO AsteroidMap
-readInput = parseInput <$> readFile "./resources/input-day10.txt"
+readInput = parseAsteroids <$> readFile "./resources/input-day10.txt"
 
 solutionPart1 :: IO (Position, Int)
 solutionPart1 = findBestPosition <$> readInput

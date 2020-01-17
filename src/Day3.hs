@@ -110,9 +110,6 @@ inputParser = trimSpacesEOF $ count 2 (line <* endOfLine)
     segment = (,) <$> direction <*> integer
     direction = toDirection <$> choice [char 'U', char 'D', char 'L', char 'R']
 
-parseInput :: String -> [Line]
-parseInput = concatMap fst . readP_to_S inputParser
-
 maybeTwoLines :: [Line] -> Maybe (Line, Line)
 maybeTwoLines input =
   case input of
@@ -120,7 +117,7 @@ maybeTwoLines input =
     _              -> Nothing
 
 solutionPart1 :: String -> Maybe Int
-solutionPart1 = fmap (minDistance manhattanDistance) . maybeTwoLines . parseInput
+solutionPart1 = fmap (minDistance manhattanDistance) . maybeTwoLines . parseInput inputParser
 
 solutionPart2 :: String -> Maybe Int
-solutionPart2 = fmap (minDistance stepDistance) . maybeTwoLines . parseInput
+solutionPart2 = fmap (minDistance stepDistance) . maybeTwoLines . parseInput inputParser

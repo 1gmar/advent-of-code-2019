@@ -37,7 +37,7 @@ showResult (Left err)  = "Error: " ++ err
 showResult (Right res) = show res
 
 solutionPart1 :: String -> String
-solutionPart1 = showResult . runGravityAssistProgram . parseInput
+solutionPart1 = showResult . runGravityAssistProgram . parseIntCode
 
 solutionPart2 :: String -> String
-solutionPart2 = showResult . fmap nounVerbChecksum . findInputPairFor 19690720 . parseInput
+solutionPart2 = showResult . fmap nounVerbChecksum . findInputPairFor 19690720 . parseIntCode
