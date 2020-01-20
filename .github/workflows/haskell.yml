@@ -15,11 +15,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        stack --no-terminal --install-ghc --resolver lts-14.16 bench --only-dependencies
+        stack --no-terminal setup
 
     - name: Build
       run: |
-        stack --no-terminal --resolver lts-14.16 bench --no-run-benchmarks --haddock --no-haddock-deps
+        stack --no-terminal bench
 
     - name: Run tests
-      run: stack test
+      run: stack --no-terminal test

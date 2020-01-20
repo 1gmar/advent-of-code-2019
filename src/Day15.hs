@@ -87,7 +87,7 @@ printResult (Left err)  = putStrLn $ "Error: " ++ err
 printResult (Right res) = print res
 
 inputFile :: String
-inputFile = "./resources/input-day15.txt"
+inputFile = "./resources/input/day15.txt"
 
 solutionPart1 :: IO ()
 solutionPart1 = readInputData inputFile >>= printResult . fmap moves . searchMinPath . startingQueue

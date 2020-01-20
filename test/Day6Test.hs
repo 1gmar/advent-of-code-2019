@@ -6,7 +6,7 @@ import           Day6
 import           UnitTest
 
 realInput :: String
-realInput = "./resources/input-day6.txt"
+realInput = "./resources/input/day6.txt"
 
 testCase1 :: String
 testCase1 = unlines ["COM)B", "B)C", "C)D", "D)E", "E)F", "B)G", "G)H", "D)I", "E)J", "J)K", "K)L"]

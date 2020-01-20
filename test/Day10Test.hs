@@ -6,7 +6,7 @@ import           Day10
 import           UnitTest
 
 realInput :: String
-realInput = "./resources/input-day10.txt"
+realInput = "./resources/input/day10.txt"
 
 testCase1 :: String
 testCase1 =

@@ -68,7 +68,7 @@ inputParser = trimSpacesEOF $ count 4 (line <* endOfLine)
     z = string "z=" *> integer <* char '>'
 
 readInput :: IO [Moon]
-readInput = parseInput inputParser <$> readFile "./resources/input-day12.txt"
+readInput = parseInput inputParser <$> readFile "./resources/input/day12.txt"
 
 solutionPart1 :: IO Int
 solutionPart1 = computeTotalEnergy . stepNTimes 1000 <$> readInput

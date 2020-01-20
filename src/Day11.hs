@@ -142,14 +142,14 @@ showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines
 
 writeResult :: Either String String -> IO ()
 writeResult (Left err)     = putStrLn err
-writeResult (Right panels) = writeFile "./out/output-day11.txt" panels
+writeResult (Right panels) = writeFile "./resources/output/day11.txt" panels
 
 showResult :: Either String Int -> String
 showResult (Left err)  = "Error: " ++ err
 showResult (Right res) = show res
 
 inputFile :: String
-inputFile = "./resources/input-day11.txt"
+inputFile = "./resources/input/day11.txt"
 
 solutionPart1 :: IO ()
 solutionPart1 = readInputData inputFile >>= putStrLn . showResult . fmap countPaintedPanels . runPaintingRobot Black

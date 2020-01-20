@@ -102,7 +102,7 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
     code = munch1 isAsciiUpper
 
 readInput :: IO RecipeMap
-readInput = parseInput inputParser <$> readFile "./resources/input-day14.txt"
+readInput = parseInput inputParser <$> readFile "./resources/input/day14.txt"
 
 solutionPart1 :: IO (Maybe Int)
 solutionPart1 = computeMinCost <$> readInput

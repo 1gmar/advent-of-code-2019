@@ -10,7 +10,7 @@ getEasterEgg = fmap (map chr . output) . runIntCodeProgram . programState
 
 writeEgg :: Either String String -> IO ()
 writeEgg (Left err)  = putStrLn err
-writeEgg (Right egg) = writeFile "./out/easter-egg.txt" egg
+writeEgg (Right egg) = writeFile "./resources/output/easter-egg.txt" egg
 
 runEasterEgg :: IO ()
-runEasterEgg = readInputData "./resources/easter-egg.txt" >>= writeEgg . getEasterEgg
+runEasterEgg = readInputData "./resources/input/easter-egg.txt" >>= writeEgg . getEasterEgg
