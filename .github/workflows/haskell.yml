@@ -1,0 +1,25 @@
+name: Haskell CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Setup stack
+      uses: mstksg/setup-stack@v1
+
+    - name: Install dependencies
+      run: |
+        stack --no-terminal --install-ghc --resolver lts-14.16 bench --only-dependencies
+
+    - name: Build
+      run: |
+        stack --no-terminal --resolver lts-14.16 bench --no-run-benchmarks --haddock --no-haddock-deps
+
+    - name: Run tests
+      run: stack test
