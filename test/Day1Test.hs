@@ -13,17 +13,20 @@ test =
   runTest
     DayTest
       { day = 1
-      , testCases =
-          ( [ Assertion (Constant "12") solutionPart1 (Constant 2)
-            , Assertion (Constant "14") solutionPart1 (Constant 2)
-            , Assertion (Constant "1969") solutionPart1 (Constant 654)
-            , Assertion (Constant "100756") solutionPart1 (Constant 33583)
-            , Assertion (fileSource realInput) solutionPart1 (Constant 3423511)
-            ]
-          , [ Assertion (Constant "12") solutionPart2 (Constant 2)
-            , Assertion (Constant "14") solutionPart2 (Constant 2)
-            , Assertion (Constant "1969") solutionPart2 (Constant 966)
-            , Assertion (Constant "100756") solutionPart2 (Constant 50346)
-            , Assertion (fileSource realInput) solutionPart2 (Constant 5132379)
+      , part1 =
+          ( solutionPart1
+          , [ Assertion (Constant "12") (Constant 2)
+            , Assertion (Constant "14") (Constant 2)
+            , Assertion (Constant "1969") (Constant 654)
+            , Assertion (Constant "100756") (Constant 33583)
+            , Assertion (fileSource realInput) (Constant 3423511)
+            ])
+      , part2 =
+          ( solutionPart2
+          , [ Assertion (Constant "12") (Constant 2)
+            , Assertion (Constant "14") (Constant 2)
+            , Assertion (Constant "1969") (Constant 966)
+            , Assertion (Constant "100756") (Constant 50346)
+            , Assertion (fileSource realInput) (Constant 5132379)
             ])
       }

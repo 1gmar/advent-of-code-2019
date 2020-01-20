@@ -83,15 +83,16 @@ test =
   runTest
     DayTest
       { day = 10
-      , testCases =
-          ( [ Assertion (Constant testCase1) solutionPart1 (Constant 8)
-            , Assertion (Constant testCase2) solutionPart1 (Constant 33)
-            , Assertion (Constant testCase3) solutionPart1 (Constant 35)
-            , Assertion (Constant testCase4) solutionPart1 (Constant 41)
-            , Assertion (Constant testCase5) solutionPart1 (Constant 210)
-            , Assertion (fileSource realInput) solutionPart1 (Constant 347)
-            ]
-          , [ Assertion (Constant testCase5) solutionPart2 (Constant 802)
-            , Assertion (fileSource realInput) solutionPart2 (Constant 829)
+      , part1 =
+          ( solutionPart1
+          , [ Assertion (Constant testCase1) (Constant 8)
+            , Assertion (Constant testCase2) (Constant 33)
+            , Assertion (Constant testCase3) (Constant 35)
+            , Assertion (Constant testCase4) (Constant 41)
+            , Assertion (Constant testCase5) (Constant 210)
+            , Assertion (fileSource realInput) (Constant 347)
             ])
+      , part2 =
+          ( solutionPart2
+          , [Assertion (Constant testCase5) (Constant 802), Assertion (fileSource realInput) (Constant 829)])
       }

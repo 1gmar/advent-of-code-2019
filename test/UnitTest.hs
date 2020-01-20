@@ -22,14 +22,14 @@ instance Show a => Show (Source a) where
 data Assertion a b =
   Assertion
     { input    :: Source a
-    , run      :: a -> b
     , expected :: Source b
     }
 
 data DayTest a b c =
   DayTest
-    { day       :: Int
-    , testCases :: ([Assertion a b], [Assertion a c])
+    { day   :: Int
+    , part1 :: (a -> b, [Assertion a b])
+    , part2 :: (a -> c, [Assertion a c])
     }
 
 fileSource :: String -> Source String
@@ -41,8 +41,8 @@ readSource source =
     File _ sourceIO   -> sourceIO
     Constant constant -> pure constant
 
-assert :: (Eq b, Show a, Show b) => Assertion a b -> IO ()
-assert Assertion {..} = do
+assert :: (Eq b, Show a, Show b) => (a -> b) -> Assertion a b -> IO ()
+assert run Assertion {..} = do
   putStrLn $ "Test Case:\n" ++ show input
   result <- run <$> readSource input
   (result `shouldBe`) =<< readSource expected
@@ -56,6 +56,8 @@ runTest :: (Eq b, Eq c, Show a, Show b, Show c) => DayTest a b c -> IO ()
 runTest DayTest {..} = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"
-  mapM_ assert (fst testCases)
+  runAssertions part1
   putStrLn "Part 2:\n"
-  mapM_ assert (snd testCases)
+  runAssertions part2
+  where
+    runAssertions (run, testCases) = mapM_ (assert run) testCases

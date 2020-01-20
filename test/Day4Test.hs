@@ -10,7 +10,6 @@ test =
   runTest
     DayTest
       { day = 4
-      , testCases =
-          ( [Assertion (Constant (134792, 675810)) solutionPart1 (Constant 1955)]
-          , [Assertion (Constant (134792, 675810)) solutionPart2 (Constant 1319)])
+      , part1 = (solutionPart1, [Assertion (Constant (134792, 675810)) (Constant 1955)])
+      , part2 = (solutionPart2, [Assertion (Constant (134792, 675810)) (Constant 1319)])
       }
