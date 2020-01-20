@@ -13,13 +13,11 @@ jobs:
     - name: Setup stack
       uses: mstksg/setup-stack@v1
 
-    - name: Install dependencies
-      run: |
-        stack --no-terminal setup
+    - name: Setup GHC
+      run: stack --no-terminal setup
 
     - name: Build
-      run: |
-        stack --no-terminal bench
+      run: stack --no-terminal build
 
     - name: Run tests
-      run: stack --no-terminal test
+      run: stack --no-terminal test --bench
