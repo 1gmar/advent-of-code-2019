@@ -102,13 +102,10 @@ collectAsteroids width (asteroids, index) cell =
         Asteroid -> ((x, y) : asteroids, index + 1)
         Empty    -> (asteroids, index + 1)
 
-readInput :: IO AsteroidMap
-readInput = parseAsteroids <$> readFile "./resources/input-day10.txt"
+solutionPart1 :: String -> Int
+solutionPart1 = snd . findBestPosition . parseAsteroids
 
-solutionPart1 :: IO (Position, Int)
-solutionPart1 = findBestPosition <$> readInput
-
-solutionPart2 :: IO Int
-solutionPart2 = posChecksum . find200thVaporizedAsteroid <$> readInput
+solutionPart2 :: String -> Int
+solutionPart2 = posChecksum . find200thVaporizedAsteroid . parseAsteroids
   where
     posChecksum (x, y) = 100 * x + y
