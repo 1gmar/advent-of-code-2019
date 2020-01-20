@@ -8,11 +8,8 @@ import           IntCodeProgram
 runBoostProgram :: [Int] -> [Int] -> ProgramResult
 runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
-inputFile :: String
-inputFile = "./resources/input-day9.txt"
+solutionPart1 :: String -> String
+solutionPart1 = showResult . runBoostProgram [1] . parseIntCode
 
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showResult . runBoostProgram [1]
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= putStrLn . showResult . runBoostProgram [2]
+solutionPart2 :: String -> String
+solutionPart2 = showResult . runBoostProgram [2] . parseIntCode
