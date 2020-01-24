@@ -7,7 +7,7 @@ module Day11
   ) where
 
 import           Data.List      (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
-import           IntCodeProgram hiding (showResult)
+import           IntCodeProgram
 
 type Position = (Int, Int)
 

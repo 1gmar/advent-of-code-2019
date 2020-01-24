@@ -4,8 +4,6 @@ module IntCodeProgram
   ( ProgramState(..)
   , ProgramResult
   , runIntCodeProgram
-  , readInputData
-  , showResult
   , programState
   , programWithInput
   , parseIntCode
@@ -236,20 +234,10 @@ runIntCodeProgram state@ProgramState {..}
   | endOfProgram program iPointer = returnState state True
   | otherwise = program `elemAt` iPointer >>= processInstruction state
 
-inputParser :: ReadP [Int]
-inputParser = trimSpacesEOF $ integer `sepBy` char ','
-
 parseIntCode :: String -> [Int]
 parseIntCode = parseInput inputParser
-
-readInputData :: String -> IO [Int]
-readInputData file = parseInput inputParser <$> readFile file
-
-showResult :: ProgramResult -> String
-showResult progResult =
-  case progResult of
-    Right state -> show $ result state
-    Left err    -> "Error: " ++ err
+  where
+    inputParser = trimSpacesEOF $ integer `sepBy` char ','
 
 programState :: [Int] -> ProgramState
 programState prog = ProgramState 0 False [] [] prog 0 0

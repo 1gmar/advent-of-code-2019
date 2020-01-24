@@ -71,7 +71,7 @@ searchMinPath (droid:queue)
 
 spreadOxygen :: Int -> [Droid] -> Either String Int
 spreadOxygen minutes edges
-  | null edges = Right $ subtract 1 minutes
+  | null edges = Right $ minutes - 1
   | otherwise = moveDroids (concatMap neighbors edges) >>= spreadOxygen (minutes + 1)
 
 findOxygenMinutes :: [Droid] -> Either String Int
@@ -82,15 +82,8 @@ findOxygenMinutes queue = do
 startingQueue :: [Int] -> [Droid]
 startingQueue prog = [Droid Center 0 (programState prog) Empty]
 
-printResult :: Either String Int -> IO ()
-printResult (Left err)  = putStrLn $ "Error: " ++ err
-printResult (Right res) = print res
+solutionPart1 :: String -> Either String Int
+solutionPart1 = fmap moves . searchMinPath . startingQueue . parseIntCode
 
-inputFile :: String
-inputFile = "./resources/input/day15.txt"
-
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= printResult . fmap moves . searchMinPath . startingQueue
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= printResult . findOxygenMinutes . startingQueue
+solutionPart2 :: String -> Either String Int
+solutionPart2 = findOxygenMinutes . startingQueue . parseIntCode
