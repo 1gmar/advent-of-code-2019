@@ -26,11 +26,11 @@ data Assertion a b =
     , expected :: Source b
     }
 
-data DayTest a b c =
+data DayTest a1 a2 b1 b2 =
   DayTest
     { day   :: Int
-    , part1 :: (a -> b, [Assertion a b])
-    , part2 :: (a -> c, [Assertion a c])
+    , part1 :: (a1 -> b1, [Assertion a1 b1])
+    , part2 :: (a2 -> b2, [Assertion a2 b2])
     }
 
 fileSource :: String -> Source String
@@ -56,7 +56,7 @@ assert run Assertion {..} = do
       | result == expect = putStrLn "Passed!\n"
       | otherwise = void $ throwIO $ AssertionFailed (errorMsg result)
 
-runTest :: (Eq b, Eq c, Show a, Show b, Show c) => DayTest a b c -> IO ()
+runTest :: (Eq b1, Eq b2, Show a1, Show a2, Show b1, Show b2) => DayTest a1 a2 b1 b2 -> IO ()
 runTest DayTest {..} = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"
