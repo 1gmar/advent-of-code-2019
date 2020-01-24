@@ -18,10 +18,10 @@ test =
       { day = 9
       , part1 =
           ( solutionPart1
-          , [ Assertion (Constant testCase) (Constant "99")
-            , Assertion (Constant "1102,34915192,34915192,7,4,7,99,0") (Constant "1219070632396864")
-            , Assertion (Constant "104,1125899906842624,99") (Constant "1125899906842624")
-            , Assertion (fileSource realInput) (Constant "2752191671")
+          , [ Assertion (Constant testCase) (Constant $ Right 99)
+            , Assertion (Constant "1102,34915192,34915192,7,4,7,99,0") (Constant $ Right 1219070632396864)
+            , Assertion (Constant "104,1125899906842624,99") (Constant $ Right 1125899906842624)
+            , Assertion (fileSource realInput) (Constant $ Right 2752191671)
             ])
-      , part2 = (solutionPart2, [Assertion (fileSource realInput) (Constant "87571")])
+      , part2 = (solutionPart2, [Assertion (fileSource realInput) (Constant $ Right 87571)])
       }

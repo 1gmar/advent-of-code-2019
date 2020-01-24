@@ -39,15 +39,15 @@ test =
       { day = 7
       , part1 =
           ( solutionPart1
-          , [ Assertion (Constant testCase1) (Constant "43210")
-            , Assertion (Constant testCase2) (Constant "54321")
-            , Assertion (Constant testCase3) (Constant "65210")
-            , Assertion (fileSource realInput) (Constant "255590")
+          , [ Assertion (Constant testCase1) (Constant $ Right 43210)
+            , Assertion (Constant testCase2) (Constant $ Right 54321)
+            , Assertion (Constant testCase3) (Constant $ Right 65210)
+            , Assertion (fileSource realInput) (Constant $ Right 255590)
             ])
       , part2 =
           ( solutionPart2
-          , [ Assertion (Constant testCase4) (Constant "139629729")
-            , Assertion (Constant testCase5) (Constant "18216")
-            , Assertion (fileSource realInput) (Constant "58285150")
+          , [ Assertion (Constant testCase4) (Constant $ Right 139629729)
+            , Assertion (Constant testCase5) (Constant $ Right 18216)
+            , Assertion (fileSource realInput) (Constant $ Right 58285150)
             ])
       }

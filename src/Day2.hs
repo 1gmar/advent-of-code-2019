@@ -32,12 +32,8 @@ findInputPairFor targetOutput prog =
 nounVerbChecksum :: (Int, Int) -> Int
 nounVerbChecksum (noun, verb) = 100 * noun + verb
 
-showResult :: Either String Int -> String
-showResult (Left err)  = "Error: " ++ err
-showResult (Right res) = show res
+solutionPart1 :: String -> Either String Int
+solutionPart1 = runGravityAssistProgram . parseIntCode
 
-solutionPart1 :: String -> String
-solutionPart1 = showResult . runGravityAssistProgram . parseIntCode
-
-solutionPart2 :: String -> String
-solutionPart2 = showResult . fmap nounVerbChecksum . findInputPairFor 19690720 . parseIntCode
+solutionPart2 :: String -> Either String Int
+solutionPart2 = fmap nounVerbChecksum . findInputPairFor 19690720 . parseIntCode

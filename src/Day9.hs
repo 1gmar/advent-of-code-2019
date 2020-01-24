@@ -8,8 +8,8 @@ import           IntCodeProgram
 runBoostProgram :: [Int] -> [Int] -> ProgramResult
 runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
 
-solutionPart1 :: String -> String
-solutionPart1 = showResult . runBoostProgram [1] . parseIntCode
+solutionPart1 :: String -> Either String Int
+solutionPart1 = fmap result . runBoostProgram [1] . parseIntCode
 
-solutionPart2 :: String -> String
-solutionPart2 = showResult . runBoostProgram [2] . parseIntCode
+solutionPart2 :: String -> Either String Int
+solutionPart2 = fmap result . runBoostProgram [2] . parseIntCode

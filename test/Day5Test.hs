@@ -21,17 +21,17 @@ test =
       { day = 5
       , part1 =
           ( solutionPart1
-          , [ Assertion (Constant "3,9,8,9,10,9,4,9,99,-1,8") (Constant "0")
-            , Assertion (Constant "3,9,7,9,10,9,4,9,99,-1,8") (Constant "1")
-            , Assertion (Constant "3,3,1108,-1,8,3,4,3,99") (Constant "0")
-            , Assertion (Constant "3,3,1107,-1,8,3,4,3,99") (Constant "1")
-            , Assertion (fileSource realInput) (Constant "15386262")
+          , [ Assertion (Constant "3,9,8,9,10,9,4,9,99,-1,8") (Constant $ Right 0)
+            , Assertion (Constant "3,9,7,9,10,9,4,9,99,-1,8") (Constant $ Right 1)
+            , Assertion (Constant "3,3,1108,-1,8,3,4,3,99") (Constant $ Right 0)
+            , Assertion (Constant "3,3,1107,-1,8,3,4,3,99") (Constant $ Right 1)
+            , Assertion (fileSource realInput) (Constant $ Right 15386262)
             ])
       , part2 =
           ( solutionPart2
-          , [ Assertion (Constant "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9") (Constant "1")
-            , Assertion (Constant "3,3,1105,-1,9,1101,0,0,12,4,12,99,1") (Constant "1")
-            , Assertion (Constant testCase) (Constant "999")
-            , Assertion (fileSource realInput) (Constant "10376124")
+          , [ Assertion (Constant "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9") (Constant $ Right 1)
+            , Assertion (Constant "3,3,1105,-1,9,1101,0,0,12,4,12,99,1") (Constant $ Right 1)
+            , Assertion (Constant testCase) (Constant $ Right 999)
+            , Assertion (fileSource realInput) (Constant $ Right 10376124)
             ])
       }
