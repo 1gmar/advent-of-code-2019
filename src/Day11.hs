@@ -140,19 +140,8 @@ showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines
     fullGridLines = fillGridLine (minX, maxX) <$> gridLines
     showPanels gridRow rows = map showPanel gridRow : rows
 
-writeResult :: Either String String -> IO ()
-writeResult (Left err)     = putStrLn err
-writeResult (Right panels) = writeFile "./resources/output/day11.txt" panels
+solutionPart1 :: String -> Either String Int
+solutionPart1 = fmap countPaintedPanels . runPaintingRobot Black . parseIntCode
 
-showResult :: Either String Int -> String
-showResult (Left err)  = "Error: " ++ err
-showResult (Right res) = show res
-
-inputFile :: String
-inputFile = "./resources/input/day11.txt"
-
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= putStrLn . showResult . fmap countPaintedPanels . runPaintingRobot Black
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= writeResult . fmap showRegistrationNumber . runPaintingRobot White
+solutionPart2 :: String -> Either String String
+solutionPart2 = fmap showRegistrationNumber . runPaintingRobot White . parseIntCode

@@ -1,4 +1,5 @@
 import qualified Day10Test as Day10
+import qualified Day11Test as Day11
 import qualified Day1Test  as Day1
 import qualified Day2Test  as Day2
 import qualified Day3Test  as Day3
@@ -11,6 +12,17 @@ import qualified Day9Test  as Day9
 
 main :: IO ()
 main =
-  putStrLn " Running AoC tests:" >>
+  putStrLn "Running AoC tests:" >>
   sequence_
-    [Day1.test, Day2.test, Day3.test, Day4.test, Day5.test, Day6.test, Day7.test, Day8.test, Day9.test, Day10.test]
+    [ Day1.test
+    , Day2.test
+    , Day3.test
+    , Day4.test
+    , Day5.test
+    , Day6.test
+    , Day7.test
+    , Day8.test
+    , Day9.test
+    , Day10.test
+    , Day11.test
+    ]

@@ -6,6 +6,7 @@ module UnitTest
   , DayTest(..)
   , runTest
   , fileSource
+  , fileSourceM
   ) where
 
 import           Control.Exception (AssertionFailed (..), throwIO)
@@ -34,6 +35,9 @@ data DayTest a b c =
 
 fileSource :: String -> Source String
 fileSource file = File file (readFile file)
+
+fileSourceM :: (String -> m String) -> String -> Source (m String)
+fileSourceM fM file = File file (fM <$> readFile file)
 
 readSource :: Source a -> IO a
 readSource source =
