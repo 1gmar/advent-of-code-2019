@@ -101,11 +101,8 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
     element = flip (,) <$> (skipSpaces *> integer) <*> (skipSpaces *> code)
     code = munch1 isAsciiUpper
 
-readInput :: IO RecipeMap
-readInput = parseInput inputParser <$> readFile "./resources/input/day14.txt"
+solutionPart1 :: String -> Maybe Int
+solutionPart1 = computeMinCost . parseInput inputParser
 
-solutionPart1 :: IO (Maybe Int)
-solutionPart1 = computeMinCost <$> readInput
-
-solutionPart2 :: IO (Maybe Int)
-solutionPart2 = findMaxFuelFor 1000000000000 <$> readInput
+solutionPart2 :: String -> Maybe Int
+solutionPart2 = findMaxFuelFor 1000000000000 . parseInput inputParser
