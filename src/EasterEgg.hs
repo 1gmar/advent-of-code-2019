@@ -13,4 +13,4 @@ writeEgg (Left err)  = putStrLn err
 writeEgg (Right egg) = writeFile "./resources/output/easter-egg.txt" egg
 
 runEasterEgg :: IO ()
-runEasterEgg = readInputData "./resources/input/easter-egg.txt" >>= writeEgg . getEasterEgg
+runEasterEgg = readFile "./resources/input/easter-egg.txt" >>= writeEgg . getEasterEgg . parseIntCode
