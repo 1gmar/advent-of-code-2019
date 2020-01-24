@@ -99,15 +99,8 @@ playGame game@(Game currentState _ _)
 startFreeGame :: [Int] -> Game
 startFreeGame prog = Game (programState (2 : drop 1 prog)) 0 []
 
-printResult :: Either String Int -> IO ()
-printResult (Left err)  = putStrLn $ "Error: " ++ err
-printResult (Right res) = print res
+solutionPart1 :: String -> Either String Int
+solutionPart1 = fmap countBlockTiles . buildGameGrid . startGame . parseIntCode
 
-inputFile :: String
-inputFile = "./resources/input/day13.txt"
-
-solutionPart1 :: IO ()
-solutionPart1 = readInputData inputFile >>= printResult . fmap countBlockTiles . buildGameGrid . startGame
-
-solutionPart2 :: IO ()
-solutionPart2 = readInputData inputFile >>= printResult . fmap score . playGame . startFreeGame
+solutionPart2 :: String -> Either String Int
+solutionPart2 = fmap score . playGame . startFreeGame . parseIntCode

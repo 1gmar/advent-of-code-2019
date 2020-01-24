@@ -1,6 +1,7 @@
 import qualified Day10Test as Day10
 import qualified Day11Test as Day11
 import qualified Day12Test as Day12
+import qualified Day13Test as Day13
 import qualified Day1Test  as Day1
 import qualified Day2Test  as Day2
 import qualified Day3Test  as Day3
@@ -27,4 +28,5 @@ main =
     , Day10.test
     , Day11.test
     , Day12.test
+    , Day13.test
     ]
