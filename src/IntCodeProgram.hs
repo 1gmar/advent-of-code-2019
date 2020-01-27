@@ -14,7 +14,7 @@ module IntCodeProgram
 
 import           Data.Bifunctor              (bimap)
 import           Data.List                   (find, unfoldr)
-import           Data.Vector.Unboxed         (Vector, empty, fromList, modify, slice, snoc, toList, (!), (!?))
+import           Data.Vector.Unboxed         (Vector, empty, fromList, modify, slice, snoc, toList, (!))
 import qualified Data.Vector.Unboxed         as V (length, null, replicate, (++))
 import           Data.Vector.Unboxed.Mutable (write)
 import           ParseUtils
@@ -96,24 +96,26 @@ nextIPointer op =
     JumpIf _      -> (+ 3)
     UpdateRelBase -> (+ 2)
 
-maybeGrow :: IntV -> Int -> IntV
-maybeGrow program index =
-  case program !? index of
-    Just _  -> program
-    Nothing -> extendedProg
+maybeGrow :: IntV -> Int -> Either String IntV
+maybeGrow program index
+  | 0 <= index = Right extendedProg
+  | otherwise = Left $ "Invalid negative instruction pointer: " ++ show index
   where
     progSize = V.length program
-    extendedProg = program V.++ V.replicate (index - progSize + 1) 0
+    extendedProg =
+      if index < progSize
+        then program
+        else program V.++ V.replicate (index - progSize + 1) 0
 
 elemAt :: IntV -> Int -> Either String (Int, IntV)
-elemAt program index
-  | 0 <= index = Right (extendedProg ! index, extendedProg)
-  | otherwise = Left $ "Invalid negative index: " ++ show program
+elemAt program index = getElem <$> maybeGrow program index
   where
-    extendedProg = maybeGrow program index
+    getElem prog = (prog ! index, prog)
 
 replaceAt :: Int -> Int -> IntV -> Either String IntV
-replaceAt index value program = modify (\v -> write v index value) . snd <$> elemAt program index
+replaceAt index value program = modify writeValue <$> maybeGrow program index
+  where
+    writeValue vector = write vector index value
 
 tokenize :: Int -> [Int]
 tokenize 0 = [0]
