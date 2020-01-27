@@ -43,6 +43,6 @@ test =
           , [ Assertion (Constant testCase4) (Constant 84462026)
             , Assertion (Constant testCase5) (Constant 78725270)
             , Assertion (Constant testCase6) (Constant 53553731)
-            , Assertion (fileSource realInput) (Constant 0)
+            , Assertion (fileSource realInput) (Constant 84692524)
             ])
       }

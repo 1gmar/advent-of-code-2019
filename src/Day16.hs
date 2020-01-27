@@ -5,9 +5,14 @@ module Day16
   , solutionPart2
   ) where
 
-import           Data.Char   (digitToInt, isDigit)
-import           Data.Vector (Vector, cons, empty, enumFromN, fromList, iterateN, (!))
-import qualified Data.Vector as V (drop, foldl, foldr, last, length, take)
+import           Control.Monad       (forM_)
+import           Control.Monad.ST    (ST, runST)
+import           Data.Char           (digitToInt, isDigit)
+import           Data.STRef          (modifySTRef, newSTRef, readSTRef)
+import           Data.Vector         (Vector, enumFromN, fromList, iterateN, slice, thaw, unsafeFreeze, (!))
+import qualified Data.Vector         as V (foldl, foldr, last, length, take)
+import           Data.Vector.Mutable (STVector)
+import qualified Data.Vector.Mutable as VM (length, read, write)
 import           ParseUtils
 
 type IntVector = Vector Int
@@ -50,20 +55,31 @@ digitsToInt = fst . V.foldr toInt (0, 0)
     toInt :: Int -> (Int, Int) -> (Int, Int)
     toInt digit (int, pos) = (digit * (10 ^ pos) + int, pos + 1)
 
-offsetPhase :: IntVector -> IntVector
-offsetPhase = fst . V.foldr sumDigits (empty, 0)
+offsetPhase :: STVector s Int -> Int -> ST s ()
+offsetPhase stVector offset = do
+  let end = VM.length stVector - 1
+  sumRef <- newSTRef 0
+  forM_ [end,end - 1 .. offset] $ \i -> do
+    digit <- VM.read stVector i
+    modifySTRef sumRef (sumDigits digit)
+    readSTRef sumRef >>= VM.write stVector i
   where
-    sumDigits digit (vector, s) =
-      let nextD = (s + digit) `mod` 10
-       in (nextD `cons` vector, nextD)
+    sumDigits digit s = (s + digit) `mod` 10
+
+repeatM :: Monad m => Int -> m () -> m ()
+repeatM times comp = forM_ [1 .. times] $ const comp
 
 findEmbeddedMsg :: IntVector -> Int
-findEmbeddedMsg digits = readMessage $ realSignal digits
+findEmbeddedMsg digits =
+  runST $ do
+    let offset = digitsToInt $ V.take 7 digits
+    let realSignal = mconcat $ replicate 10000 digits
+    stVector <- thaw realSignal
+    repeatM 100 $ offsetPhase stVector offset
+    vector <- unsafeFreeze stVector
+    return $ readMessage offset vector
   where
-    offset = digitsToInt $ V.take 7 digits
-    realSignal = V.drop offset . mconcat . replicate 10000
-    finalDigits = V.last . iterateN 100 offsetPhase . offsetPhase
-    readMessage = digitsToInt . V.take 8 . finalDigits
+    readMessage offset = digitsToInt . slice offset 8
 
 inputParser :: ReadP [Int]
 inputParser = trimSpacesEOF $ many1 digit
