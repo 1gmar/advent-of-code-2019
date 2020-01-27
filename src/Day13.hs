@@ -70,7 +70,7 @@ collectGridCells game@Game {..} outputData =
 buildGameGrid :: Game -> GameResult
 buildGameGrid game = do
   nextState <- runIntCodeProgram $ state game
-  collectGridCells game {state = nextState} (output nextState)
+  collectGridCells game {state = nextState} (outputList nextState)
 
 startGame :: [Int] -> Game
 startGame prog = Game (programState prog) 0 []
@@ -93,8 +93,8 @@ playGame game@(Game currentState _ _)
   | otherwise = do
     nextGame <- buildGameGrid game
     paddleCmd <- choosePaddleCmd nextGame
-    let nextState = state nextGame
-    playGame (nextGame {state = nextState {input = [paddleCmd], output = []}})
+    let nextState = programWithOutput (state nextGame) []
+    playGame (nextGame {state = nextState {input = [paddleCmd]}})
 
 startFreeGame :: [Int] -> Game
 startFreeGame prog = Game (programState (2 : drop 1 prog)) 0 []

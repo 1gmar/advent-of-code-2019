@@ -21,7 +21,7 @@ data Amplifier =
 runSimpleChain :: AmpChainRunner
 runSimpleChain initProg = foldM chainResult (programState initProg)
   where
-    chainResult ProgramState {..} phase = runIntCodeProgram $ programWithInput initProg [phase, result]
+    chainResult state phase = runIntCodeProgram $ programWithInput initProg [phase, result state]
 
 runLoopModeChain :: AmpChainRunner
 runLoopModeChain initProg phaseSetting = loopOver amplifiers
@@ -39,7 +39,7 @@ loopOver (current@(Amplifier code state):next@Amplifier {..}:rest)
   where
     chainResult amp nextState = loopOver (setupNext (result nextState) : rest ++ [amp {softState = nextState}])
     setupNext res = next {softState = inSignal res softState}
-    inSignal signal nextState@ProgramState {..} = nextState {input = input ++ [signal]}
+    inSignal signal nextState = nextState {input = input nextState ++ [signal]}
 
 findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [Int] -> ProgramResult
 findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner

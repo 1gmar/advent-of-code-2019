@@ -18,7 +18,7 @@ runGravityAssistProgram prog =
     Left err      -> Left err
     _             -> Left "Illegal program state!"
   where
-    completedProgram = program <$> runIntCodeProgram (programState prog)
+    completedProgram = programList <$> runIntCodeProgram (programState prog)
 
 findInputPairFor :: Int -> [Int] -> Either String (Int, Int)
 findInputPairFor targetOutput prog =

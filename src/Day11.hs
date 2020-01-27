@@ -91,10 +91,10 @@ paintShip robot@Robot {..}
   | otherwise = do
     let color = fromEnum $ currentColor robot
     interruptedState <- runIntCodeProgram state {input = [color]}
-    (nextColor, nextDirection) <- extractOutput $ output interruptedState
+    (nextColor, nextDirection) <- extractOutput $ outputList interruptedState
     brushRobot <- paintCurrentPanel robot nextColor
     rotatedRobot <- rotateRobot brushRobot nextDirection
-    paintShip $ (moveRobot rotatedRobot) {state = interruptedState {output = []}}
+    paintShip $ (moveRobot rotatedRobot) {state = programWithOutput interruptedState []}
   where
     extractOutput out =
       case out of
