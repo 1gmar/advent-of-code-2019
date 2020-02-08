@@ -46,8 +46,8 @@ data ProgramState =
     { iPointer     :: Int
     , halted       :: Bool
     , input        :: [Int]
-    , output       :: IntV
-    , program      :: IntV
+    , output       :: !IntV
+    , program      :: !IntV
     , relativeBase :: Int
     , result       :: Int
     }
@@ -102,10 +102,9 @@ maybeGrow program index
   | otherwise = Left $ "Invalid negative instruction pointer: " ++ show index
   where
     progSize = V.length program
-    extendedProg =
-      if index < progSize
-        then program
-        else program V.++ V.replicate (index - progSize + 1) 0
+    extendedProg
+      | index < progSize = program
+      | otherwise = program V.++ V.replicate (index - progSize + 1) 0
 
 elemAt :: IntV -> Int -> Either String (Int, IntV)
 elemAt program index = getElem <$> maybeGrow program index

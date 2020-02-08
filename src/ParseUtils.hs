@@ -14,14 +14,14 @@ import           Text.ParserCombinators.ReadP as ParserCombinators (ReadP, char,
 endOfLine :: ReadP Char
 endOfLine = satisfy isControl
 
-parseAndAppend :: ReadP a -> ReadP [a] -> ReadP [a]
-parseAndAppend parser list = parser >>= \token -> (token :) <$> list
+parsePrepend :: ReadP a -> ReadP [a] -> ReadP [a]
+parsePrepend parser list = parser >>= \token -> (token :) <$> list
 
 integer :: ReadP Int
 integer = read <$> positive +++ negative
   where
     positive = munch1 isDigit
-    negative = char '-' `parseAndAppend` positive
+    negative = char '-' `parsePrepend` positive
 
 trimSpacesEOF :: ReadP a -> ReadP a
 trimSpacesEOF parser = skipSpaces *> parser <* skipSpaces <* eof
