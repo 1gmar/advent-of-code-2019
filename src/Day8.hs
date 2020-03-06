@@ -4,7 +4,7 @@ module Day8
   ) where
 
 import           Data.List  (minimumBy)
-import           ParseUtils
+import           Util.ParseUtils
 
 data Pixel
   = Black

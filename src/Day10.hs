@@ -4,7 +4,7 @@ module Day10
   ) where
 
 import           Data.List  (maximumBy, sortBy, (\\))
-import           ParseUtils hiding (count)
+import           Util.ParseUtils hiding (count)
 
 data Cell
   = Empty

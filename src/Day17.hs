@@ -6,14 +6,14 @@ module Day17
   , solutionPart2
   ) where
 
-import           CyclicEnumClass
+import           Util.CyclicEnumClass
 import           Data.Char       (chr, ord)
 import           Data.List       (inits, intercalate, intersperse)
 import           Data.Maybe      (listToMaybe)
 import           Data.Vector     (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
 import qualified Data.Vector     as V (concat, drop, init, length, reverse, takeWhile)
-import           IntCodeProgram
-import           ParseUtils
+import           Util.IntCodeProgram
+import           Util.ParseUtils
 
 type View = Vector (Vector Char)
 

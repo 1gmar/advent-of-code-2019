@@ -6,7 +6,7 @@ module Day3
   ) where
 
 import           Data.Maybe (mapMaybe)
-import           ParseUtils
+import           Util.ParseUtils
 
 data SegmentType
   = Vertical

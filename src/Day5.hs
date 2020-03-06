@@ -3,7 +3,7 @@ module Day5
   , solutionPart2
   ) where
 
-import           IntCodeProgram
+import           Util.IntCodeProgram
 
 runDiagnosticProgram :: [Int] -> [Int] -> ProgramResult
 runDiagnosticProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData

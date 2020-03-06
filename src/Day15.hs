@@ -5,7 +5,7 @@ module Day15
   , solutionPart2
   ) where
 
-import           IntCodeProgram
+import           Util.IntCodeProgram
 
 type PriorityQueue = [Droid]
 

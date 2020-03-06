@@ -7,7 +7,7 @@ module Day12
 
 import           Data.Foldable (foldl')
 import           Data.List     (findIndex, foldl1', transpose)
-import           ParseUtils
+import           Util.ParseUtils
 
 data SpaceD =
   SpaceD

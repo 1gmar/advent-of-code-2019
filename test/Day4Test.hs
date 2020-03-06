@@ -3,7 +3,7 @@ module Day4Test
   ) where
 
 import           Day4
-import           UnitTest
+import           Util.UnitTest
 
 test :: IO ()
 test =

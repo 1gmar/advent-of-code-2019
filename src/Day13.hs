@@ -6,7 +6,7 @@ module Day13
   ) where
 
 import           Data.List      (find, (\\))
-import           IntCodeProgram
+import           Util.IntCodeProgram
 
 type Grid = [Cell]
 

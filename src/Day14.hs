@@ -7,7 +7,7 @@ import           Data.Bifunctor (bimap)
 import           Data.Char      (isAsciiUpper)
 import           Data.List      (find, groupBy, sortOn, (\\))
 import           Data.Maybe     (listToMaybe)
-import           ParseUtils
+import           Util.ParseUtils
 
 type Element = (String, Int)
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module IntCodeProgram
+module Util.IntCodeProgram
   ( ProgramState(input, result, halted, iPointer)
   , ProgramResult
   , runIntCodeProgram
@@ -17,7 +17,7 @@ import           Data.List                   (find, unfoldr)
 import           Data.Vector.Unboxed         (Vector, empty, fromList, modify, slice, snoc, toList, (!))
 import qualified Data.Vector.Unboxed         as V (length, null, replicate, (++))
 import           Data.Vector.Unboxed.Mutable (write)
-import           ParseUtils
+import           Util.ParseUtils
 
 type ProgramResult = Either String ProgramState
 

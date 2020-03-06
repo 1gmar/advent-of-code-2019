@@ -3,7 +3,7 @@ module Day6Test
   ) where
 
 import           Day6
-import           UnitTest
+import           Util.UnitTest
 
 realInput :: String
 realInput = "./resources/input/day6.txt"

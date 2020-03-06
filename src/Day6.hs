@@ -4,7 +4,7 @@ module Day6
   ) where
 
 import           Data.Char  (isAsciiUpper, isDigit)
-import           ParseUtils hiding (count)
+import           Util.ParseUtils hiding (count)
 
 data OrbitTree =
   SpaceObject String [OrbitTree]

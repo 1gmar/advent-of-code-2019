@@ -8,7 +8,7 @@ module Day7
 import           Control.Monad    (foldM)
 import           Data.List        (maximumBy, permutations)
 import           Data.Traversable (for)
-import           IntCodeProgram
+import           Util.IntCodeProgram
 
 type AmpChainRunner = [Int] -> [Int] -> ProgramResult
 

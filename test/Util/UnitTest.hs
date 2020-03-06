@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module UnitTest
+module Util.UnitTest
   ( Assertion(..)
   , Source(Constant)
   , DayTest(..)

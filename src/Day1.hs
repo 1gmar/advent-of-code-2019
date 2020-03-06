@@ -3,7 +3,7 @@ module Day1
   , solutionPart2
   ) where
 
-import           ParseUtils
+import           Util.ParseUtils
 
 evalMass :: Int -> Int
 evalMass = subtract 2 . (`div` 3)

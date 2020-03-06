@@ -6,9 +6,9 @@ module Day11
   , solutionPart2
   ) where
 
-import           CyclicEnumClass
+import           Util.CyclicEnumClass
 import           Data.List       (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
-import           IntCodeProgram
+import           Util.IntCodeProgram
 
 type Position = (Int, Int)
 

@@ -1,4 +1,4 @@
-module ParseUtils
+module Util.ParseUtils
   ( integer
   , endOfLine
   , trimSpacesEOF

@@ -13,7 +13,7 @@ import           Data.Vector         (Vector, enumFromN, fromList, iterateN, sli
 import qualified Data.Vector         as V (foldl, foldr, last, length, take)
 import           Data.Vector.Mutable (STVector)
 import qualified Data.Vector.Mutable as VM (length, read, write)
-import           ParseUtils
+import           Util.ParseUtils
 
 type IntVector = Vector Int
 

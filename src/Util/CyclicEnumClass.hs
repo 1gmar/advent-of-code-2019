@@ -1,4 +1,4 @@
-module CyclicEnumClass where
+module Util.CyclicEnumClass where
 
 class (Eq a, Enum a, Bounded a) =>
       CyclicEnum a
