@@ -4,20 +4,17 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+      - name: Clone repository
+        uses: actions/checkout@v1
 
-    - name: Setup stack
-      uses: mstksg/setup-stack@v1
+      - name: Setup stack
+        uses: mstksg/setup-stack@v1
 
-    - name: Setup GHC
-      run: stack --no-terminal setup
+      - name: Setup GHC
+        run: stack --no-terminal setup
 
-    - name: Build
-      run: stack --no-terminal build
-
-    - name: Run tests
-      run: stack --no-terminal test
+      - name: Build & run tests
+        run: stack --no-terminal test

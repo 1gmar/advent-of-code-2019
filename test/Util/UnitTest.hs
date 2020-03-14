@@ -36,7 +36,7 @@ data DayTest a1 a2 b1 b2 =
 fileSource :: String -> Source String
 fileSource file = File file (readFile file)
 
-fileSourceM :: (String -> m String) -> String -> Source (m String)
+fileSourceM :: (String -> m) -> String -> Source m
 fileSourceM fM file = File file (fM <$> readFile file)
 
 readSource :: Source a -> IO a
