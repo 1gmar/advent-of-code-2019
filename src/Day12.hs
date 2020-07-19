@@ -5,8 +5,8 @@ module Day12
   , solutionPart2
   ) where
 
-import           Data.Foldable (foldl')
-import           Data.List     (findIndex, foldl1', transpose)
+import           Data.Foldable   (foldl')
+import           Data.List       (findIndex, foldl1', transpose)
 import           Util.ParseUtils
 
 data SpaceD =

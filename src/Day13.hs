@@ -5,7 +5,7 @@ module Day13
   , solutionPart2
   ) where
 
-import           Data.List      (find, (\\))
+import           Data.List           (find, (\\))
 import           Util.IntCodeProgram
 
 type Grid = [Cell]

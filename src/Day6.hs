@@ -3,11 +3,10 @@ module Day6
   , solutionPart2
   ) where
 
-import           Data.Char  (isAsciiUpper, isDigit)
+import           Data.Char       (isAsciiUpper, isDigit)
 import           Util.ParseUtils hiding (count)
 
-data OrbitTree =
-  SpaceObject String [OrbitTree]
+data OrbitTree = SpaceObject String [OrbitTree]
 
 type OrbitalTransfer = (String, String)
 

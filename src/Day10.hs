@@ -3,7 +3,7 @@ module Day10
   , solutionPart2
   ) where
 
-import           Data.List  (maximumBy, sortBy, (\\))
+import           Data.List       (maximumBy, sortBy, (\\))
 import           Util.ParseUtils hiding (count)
 
 data Cell
@@ -18,11 +18,11 @@ type AsteroidMap = [Position]
 type Position = (Int, Int)
 
 positionDeltaFor :: Position -> Position -> (Int, Int)
-positionDeltaFor (rx, ry) (tx, ty) =
-  let x = abs (tx - rx)
-      y = abs (ty - ry)
-      divisor = x `gcd` y
-   in (x `div` divisor, y `div` divisor)
+positionDeltaFor (rx, ry) (tx, ty) = (x `div` divisor, y `div` divisor)
+  where
+    x = abs (tx - rx)
+    y = abs (ty - ry)
+    divisor = x `gcd` y
 
 laserAngle :: Position -> Position -> Double
 laserAngle (rx, ry) (x, y) = atan2 (fromIntegral (ry - y)) (fromIntegral (x - rx))
@@ -96,11 +96,12 @@ parseAsteroids input = concatRows rows
 
 collectAsteroids :: Int -> (AsteroidMap, Int) -> Cell -> (AsteroidMap, Int)
 collectAsteroids width (asteroids, index) cell =
-  let y = index `div` width
-      x = index - y * width
-   in case cell of
-        Asteroid -> ((x, y) : asteroids, index + 1)
-        Empty    -> (asteroids, index + 1)
+  case cell of
+    Asteroid -> ((x, y) : asteroids, index + 1)
+    Empty    -> (asteroids, index + 1)
+  where
+    y = index `div` width
+    x = index - y * width
 
 solutionPart1 :: String -> Int
 solutionPart1 = snd . findBestPosition . parseAsteroids

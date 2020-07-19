@@ -5,7 +5,7 @@ module Day3
   , solutionPart2
   ) where
 
-import           Data.Maybe (mapMaybe)
+import           Data.Maybe      (mapMaybe)
 import           Util.ParseUtils
 
 data SegmentType

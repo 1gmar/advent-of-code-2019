@@ -3,7 +3,7 @@ module Day8
   , solutionPart2
   ) where
 
-import           Data.List  (minimumBy)
+import           Data.List       (minimumBy)
 import           Util.ParseUtils
 
 data Pixel

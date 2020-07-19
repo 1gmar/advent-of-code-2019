@@ -10,7 +10,7 @@ steps:
       pad_module_names: true
       long_list_align: inline
       empty_list_align: inherit
-      list_padding: 4
+      list_padding: module_name
       separate_lists: true
       space_surround: false
 
@@ -18,9 +18,15 @@ steps:
       style: vertical
       align: true
       remove_redundant: true
+      language_prefix: LANGUAGE
+
+  - tabs:
+      spaces: 2
 
   - trailing_whitespace: {}
 
+indent: 2
 columns: 120
 
 newline: native
+cabal: true

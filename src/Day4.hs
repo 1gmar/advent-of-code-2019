@@ -14,7 +14,7 @@ increasingDigits = and . snd . foldl currentDigitGTE ('0', []) . show
     currentDigitGTE (prev, acc) current = (current, (current >= prev) : acc)
 
 adjacentDuplicate :: (Int -> Bool) -> Int -> Bool
-adjacentDuplicate criteria = any criteria . map length . group . show
+adjacentDuplicate criteria = any (criteria . length) . group . show
 
 solutionPart1 :: (Int, Int) -> Int
 solutionPart1 inputRange = (length . generatePasswords inputRange) [increasingDigits, adjacentDuplicate (> 1)]

@@ -5,9 +5,9 @@ module Day7
   , solutionPart2
   ) where
 
-import           Control.Monad    (foldM)
-import           Data.List        (maximumBy, permutations)
-import           Data.Traversable (for)
+import           Control.Monad       (foldM)
+import           Data.List           (maximumBy, permutations)
+import           Data.Traversable    (for)
 import           Util.IntCodeProgram
 
 type AmpChainRunner = [Int] -> [Int] -> ProgramResult

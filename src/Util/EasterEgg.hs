@@ -2,7 +2,7 @@ module Util.EasterEgg
   ( runEasterEgg
   ) where
 
-import           Data.Char      (chr)
+import           Data.Char           (chr)
 import           Util.IntCodeProgram
 
 getEasterEgg :: [Int] -> Either String String

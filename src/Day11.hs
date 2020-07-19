@@ -6,8 +6,8 @@ module Day11
   , solutionPart2
   ) where
 
+import           Data.List            (find, groupBy, sortOn, unionBy, (\\))
 import           Util.CyclicEnumClass
-import           Data.List       (find, groupBy, maximum, minimum, sortOn, unionBy, (\\))
 import           Util.IntCodeProgram
 
 type Position = (Int, Int)
@@ -118,7 +118,7 @@ fillGridLine :: (Int, Int) -> PanelGrid -> PanelGrid
 fillGridLine (lower, upper) ~line@(Panel (_, y) _:_) = sortOn xPos fullLine
   where
     fullLine = unionBy (compareOn xPos) line fillerLine
-    fillerLine = map (`Panel` Black) $ [lower .. upper] `zip` repeat y
+    fillerLine = map (\x -> curry (`Panel` Black) x y) [lower .. upper]
 
 showRegistrationNumber :: Robot -> String
 showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines

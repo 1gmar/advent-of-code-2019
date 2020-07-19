@@ -12,7 +12,7 @@ module Util.IntCodeProgram
   , outputList
   ) where
 
-import           Data.Bifunctor              (bimap)
+import           Data.Bifunctor              (first)
 import           Data.List                   (find, unfoldr)
 import           Data.Vector.Unboxed         (Vector, empty, fromList, modify, slice, snoc, toList, (!))
 import qualified Data.Vector.Unboxed         as V (length, null, replicate, (++))
@@ -195,7 +195,7 @@ updateRelativeBase state@ProgramState {..} instr@Instruction {..} =
     _                       -> illegalProgramState iPointer program
   where
     nextP = nextIPointer operation iPointer
-    updateBase = nextState . bimap (+ relativeBase) id
+    updateBase = nextState . first (+ relativeBase)
     nextState (base, prog) = state {iPointer = nextP, program = prog, relativeBase = base}
 
 illegalProgramState :: Int -> IntV -> ProgramResult

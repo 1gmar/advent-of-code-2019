@@ -3,10 +3,10 @@ module Day14
   , solutionPart2
   ) where
 
-import           Data.Bifunctor (bimap)
-import           Data.Char      (isAsciiUpper)
-import           Data.List      (find, groupBy, sortOn, (\\))
-import           Data.Maybe     (listToMaybe)
+import           Data.Bifunctor  (first, second)
+import           Data.Char       (isAsciiUpper)
+import           Data.List       (find, groupBy, sortOn, (\\))
+import           Data.Maybe      (listToMaybe)
 import           Util.ParseUtils
 
 type Element = (String, Int)
@@ -26,7 +26,7 @@ getFuelRecipe :: RecipeMap -> Maybe [Element]
 getFuelRecipe = fmap snd . findByLabel "FUEL"
 
 updateCost :: Int -> Element -> Element
-updateCost mult = bimap id (* mult)
+updateCost mult = second (* mult)
 
 addUpCosts :: [Element] -> [Element]
 addUpCosts = map (foldl1 elementCost) . groupBy compareLabels . sortOn fst
@@ -59,7 +59,7 @@ stepInRecipe recipeMap (label, cost) = (map (updateCost mult) recipe, surplus)
     (batchSize, recipe) = maybe (cost, [(label, cost)]) batchSizeToRecipe element
     element = findByLabel label recipeMap
     mult = multiplier cost batchSize
-    batchSizeToRecipe = bimap snd id
+    batchSizeToRecipe = first snd
     surplus = (label, mult * batchSize - cost)
 
 computeFuelCost :: RecipeMap -> [Element] -> [Element] -> Int

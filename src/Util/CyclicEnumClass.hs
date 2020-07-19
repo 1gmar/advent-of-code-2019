@@ -1,8 +1,6 @@
 module Util.CyclicEnumClass where
 
-class (Eq a, Enum a, Bounded a) =>
-      CyclicEnum a
-  where
+class (Eq a, Enum a, Bounded a) => CyclicEnum a where
   cPred :: a -> a
   cPred value
     | value == minBound = maxBound
