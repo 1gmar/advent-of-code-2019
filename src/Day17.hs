@@ -174,11 +174,8 @@ groupBySize size list
     let (xs, rest) = splitAt size list
      in xs : groupBySize size rest
 
-parseConcat :: ReadP [a] -> ReadP [a] -> ReadP [a]
-parseConcat parser list = parser >>= \tokens -> (tokens ++) <$> list
-
 pathParser :: (String, String, String) -> ReadP String
-pathParser (pathA, pathB, pathC) = parserA `parseConcat` (concat <$> pathPattern) <* eof
+pathParser (pathA, pathB, pathC) = (++) <$> parserA <*> (concat <$> pathPattern) <* eof
   where
     pathPattern = many1 $ choice [parserA, parserB, parserC]
     parserA = "A" <$ string pathA
@@ -207,7 +204,7 @@ reducePath fullPath =
     notEmpty = not . null
     parseAttempts = filter (notEmpty . mainRoutine) . map (attemptABCPath fullPath)
     withinBounds a b c = all ((<= 5) . length) [a, b, c]
-    filterOccurrences pathFun = concat . filter (/= pathFun) . groupBySize (length pathFun)
+    filterOccurrences path = concat . filter (/= path) . groupBySize (length path)
     substringTuples =
       [ (a, b, c)
       | a <- inits fullPath
@@ -228,7 +225,7 @@ runVacuumRobot initState = do
   result <$> runIntCodeProgram state {input = movementRoutines abcPath}
   where
     movementRoutines ABCPath {..} = concatMap asciiCode [mainRoutine, routineA, routineB, routineC, "n"]
-    asciiCode = map ord . (++ ['\n'])
+    asciiCode = map ord . (++ "\n")
 
 wakeUpState :: [Int] -> ProgramState
 wakeUpState prog = programState (2 : drop 1 prog)
