@@ -35,6 +35,8 @@ library:
     - Day17
   dependencies:
     - vector
+    - mtl
+    - transformers
 
 executables:
   advent-of-code-exe:

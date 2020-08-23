@@ -2,8 +2,8 @@ module Util.EasterEgg
   ( runEasterEgg
   ) where
 
-import           Data.Char           (chr)
-import           Util.IntCodeProgram
+import           Data.Char             (chr)
+import           Util.IntCodeProgramV2
 
 getEasterEgg :: [Int] -> Either String String
 getEasterEgg = fmap (map chr . outputList) . runIntCodeProgram . programState

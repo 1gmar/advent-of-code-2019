@@ -6,13 +6,13 @@ module Day17
   , solutionPart2
   ) where
 
-import           Data.Char            (chr, ord)
-import           Data.List            (inits, intercalate, intersperse)
-import           Data.Maybe           (listToMaybe)
-import           Data.Vector          (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
-import qualified Data.Vector          as V (concat, drop, init, length, reverse, takeWhile)
+import           Data.Char             (chr, ord)
+import           Data.List             (inits, intercalate, intersperse)
+import           Data.Maybe            (listToMaybe)
+import           Data.Vector           (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
+import qualified Data.Vector           as V (concat, drop, init, length, reverse, takeWhile)
 import           Util.CyclicEnumClass
-import           Util.IntCodeProgram
+import           Util.IntCodeProgramV2
 import           Util.ParseUtils
 
 type View = Vector (Vector Char)
@@ -33,24 +33,24 @@ data Direction
   | West
   deriving (Eq, Enum, Bounded, CyclicEnum)
 
-data Robot =
-  Robot
-    { direction :: Direction
-    , row       :: Int
-    , col       :: Int
-    , view      :: View
-    , height    :: Int
-    , width     :: Int
-    , path      :: [String]
-    }
+data Robot
+  = Robot
+      { direction :: Direction
+      , row       :: Int
+      , col       :: Int
+      , view      :: View
+      , height    :: Int
+      , width     :: Int
+      , path      :: [String]
+      }
 
-data ABCPath =
-  ABCPath
-    { mainRoutine :: String
-    , routineA    :: String
-    , routineB    :: String
-    , routineC    :: String
-    }
+data ABCPath
+  = ABCPath
+      { mainRoutine :: String
+      , routineA    :: String
+      , routineB    :: String
+      , routineC    :: String
+      }
   deriving (Show)
 
 scaffold :: Char
@@ -88,7 +88,7 @@ findIntersections view = foldl findForRow [] [1 .. height - 2]
       | view !.! (i, j) == scaffold && isIntersection i j = (i, j) : iSections
       | otherwise = iSections
 
-sumAlignParams :: ProgramState -> Either String Int
+sumAlignParams :: Program -> Either String Int
 sumAlignParams = fmap (sumParams . findIntersections . parseViewList . outputList) . runIntCodeProgram
   where
     sumParams = sum . map (uncurry (*))
@@ -216,7 +216,7 @@ reducePath fullPath =
       , withinBounds a b c
       ]
 
-runVacuumRobot :: ProgramState -> Either String Int
+runVacuumRobot :: Program -> Either String Int
 runVacuumRobot initState = do
   state <- runIntCodeProgram initState
   let view = (V.init . parseViewList . outputList) state
@@ -227,7 +227,7 @@ runVacuumRobot initState = do
     movementRoutines ABCPath {..} = concatMap asciiCode [mainRoutine, routineA, routineB, routineC, "n"]
     asciiCode = map ord . (++ "\n")
 
-wakeUpState :: [Int] -> ProgramState
+wakeUpState :: [Int] -> Program
 wakeUpState prog = programState (2 : drop 1 prog)
 
 solutionPart1 :: String -> Either String Int

@@ -5,8 +5,8 @@ module Day13
   , solutionPart2
   ) where
 
-import           Data.List           (find, (\\))
-import           Util.IntCodeProgram
+import           Data.List             (find, (\\))
+import           Util.IntCodeProgramV2
 
 type Grid = [Cell]
 
@@ -20,21 +20,21 @@ data Tile
   | Ball
   deriving (Eq)
 
-data Cell =
-  Cell
-    { position :: (Int, Int)
-    , tile     :: Tile
-    }
+data Cell
+  = Cell
+      { position :: (Int, Int)
+      , tile     :: Tile
+      }
 
 instance Eq Cell where
   Cell pos1 _ == Cell pos2 _ = pos1 == pos2
 
-data Game =
-  Game
-    { state :: ProgramState
-    , score :: Int
-    , grid  :: Grid
-    }
+data Game
+  = Game
+      { state :: Program
+      , score :: Int
+      , grid  :: Grid
+      }
 
 toTile :: Int -> Either String Tile
 toTile tileCode =

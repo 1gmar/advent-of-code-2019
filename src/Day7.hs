@@ -5,18 +5,18 @@ module Day7
   , solutionPart2
   ) where
 
-import           Control.Monad       (foldM)
-import           Data.List           (maximumBy, permutations)
-import           Data.Traversable    (for)
-import           Util.IntCodeProgram
+import           Control.Monad         (foldM)
+import           Data.List             (maximumBy, permutations)
+import           Data.Traversable      (for)
+import           Util.IntCodeProgramV2
 
 type AmpChainRunner = [Int] -> [Int] -> ProgramResult
 
-data Amplifier =
-  Amplifier
-    { label     :: Char
-    , softState :: ProgramState
-    }
+data Amplifier
+  = Amplifier
+      { label     :: Char
+      , softState :: Program
+      }
 
 runSimpleChain :: AmpChainRunner
 runSimpleChain initProg = foldM chainResult (programState initProg)

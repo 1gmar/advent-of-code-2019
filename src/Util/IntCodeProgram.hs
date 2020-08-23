@@ -41,22 +41,22 @@ data Operation
   | JumpIf Predicate
   | UpdateRelBase
 
-data ProgramState =
-  ProgramState
-    { iPointer     :: Int
-    , halted       :: Bool
-    , input        :: [Int]
-    , output       :: !IntV
-    , program      :: !IntV
-    , relativeBase :: Int
-    , result       :: Int
-    }
+data ProgramState
+  = ProgramState
+      { iPointer     :: Int
+      , halted       :: Bool
+      , input        :: [Int]
+      , output       :: !IntV
+      , program      :: !IntV
+      , relativeBase :: Int
+      , result       :: Int
+      }
 
-data Instruction =
-  Instruction
-    { operation :: Operation
-    , params    :: [Parameter]
-    }
+data Instruction
+  = Instruction
+      { operation :: Operation
+      , params    :: [Parameter]
+      }
 
 argsLenToInstrCode :: [(Int, [Int])]
 argsLenToInstrCode = [(1, [3, 4, 9]), (2, [5, 6]), (3, [1, 2, 7, 8])]
@@ -224,7 +224,7 @@ buildInstruction instrTokens args =
     instructionWith opCode pmCodes = do
       paramModes <- mapM toParamMode pmCodes
       op <- toOperation opCode
-      Right $ Instruction op (paramModes `zip` args)
+      return $ Instruction op (paramModes `zip` args)
 
 processInstruction :: ProgramState -> (Int, IntV) -> ProgramResult
 processInstruction state@ProgramState {..} (instr, newProg) =

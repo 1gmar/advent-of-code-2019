@@ -5,7 +5,7 @@ module Day15
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgram
+import           Util.IntCodeProgramV2
 
 type PriorityQueue = [Droid]
 
@@ -23,13 +23,13 @@ data Destination
   | OxygenSystem
   deriving (Eq, Enum)
 
-data Droid =
-  Droid
-    { direction   :: Direction
-    , moves       :: Int
-    , state       :: ProgramState
-    , destination :: Destination
-    }
+data Droid
+  = Droid
+      { direction   :: Direction
+      , moves       :: Int
+      , state       :: Program
+      , destination :: Destination
+      }
 
 (<:) :: Droid -> PriorityQueue -> PriorityQueue
 (<:) droid [] = [droid]

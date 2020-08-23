@@ -3,7 +3,7 @@ module Day9
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgram
+import           Util.IntCodeProgramV2
 
 runBoostProgram :: [Int] -> [Int] -> ProgramResult
 runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData

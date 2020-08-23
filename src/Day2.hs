@@ -3,7 +3,7 @@ module Day2
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgram
+import           Util.IntCodeProgramV2
 
 replaceAt :: Int -> [Int] -> [Int] -> [Int]
 replaceAt pos values list =

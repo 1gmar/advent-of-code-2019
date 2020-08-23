@@ -6,9 +6,9 @@ module Day11
   , solutionPart2
   ) where
 
-import           Data.List            (find, groupBy, sortOn, unionBy, (\\))
+import           Data.List             (find, groupBy, sortOn, unionBy, (\\))
 import           Util.CyclicEnumClass
-import           Util.IntCodeProgram
+import           Util.IntCodeProgramV2
 
 type Position = (Int, Int)
 
@@ -26,22 +26,22 @@ data Color
   | White
   deriving (Enum, Eq)
 
-data Panel =
-  Panel
-    { position :: Position
-    , color    :: Color
-    }
+data Panel
+  = Panel
+      { position :: Position
+      , color    :: Color
+      }
 
 instance Eq Panel where
   (Panel pos1 _) == (Panel pos2 _) = pos1 == pos2
 
-data Robot =
-  Robot
-    { panel     :: Panel
-    , direction :: Direction
-    , state     :: ProgramState
-    , grid      :: PanelGrid
-    }
+data Robot
+  = Robot
+      { panel     :: Panel
+      , direction :: Direction
+      , state     :: Program
+      , grid      :: PanelGrid
+      }
 
 currentColor :: Robot -> Color
 currentColor Robot {..} =
