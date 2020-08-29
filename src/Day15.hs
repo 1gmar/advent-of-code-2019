@@ -5,7 +5,7 @@ module Day15
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 
 type PriorityQueue = [Droid]
 
@@ -80,7 +80,7 @@ findOxygenMinutes queue = do
   spreadOxygen 0 [atOxygenDroid {direction = Center}]
 
 startingQueue :: [Int] -> [Droid]
-startingQueue prog = [Droid Center 0 (programState prog) Empty]
+startingQueue prog = [Droid Center 0 (newProgram prog) Empty]
 
 solutionPart1 :: String -> Either String Int
 solutionPart1 = fmap moves . searchMinPath . startingQueue . parseIntCode

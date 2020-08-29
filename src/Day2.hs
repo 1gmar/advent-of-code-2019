@@ -3,7 +3,7 @@ module Day2
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 
 replaceAt :: Int -> [Int] -> [Int] -> [Int]
 replaceAt pos values list =
@@ -18,7 +18,7 @@ runGravityAssistProgram prog =
     Left err      -> Left err
     _             -> Left "Illegal program state!"
   where
-    completedProgram = programList <$> runIntCodeProgram (programState prog)
+    completedProgram = programMemory <$> runIntCodeProgram (newProgram prog)
 
 findInputPairFor :: Int -> [Int] -> Either String (Int, Int)
 findInputPairFor targetOutput prog =

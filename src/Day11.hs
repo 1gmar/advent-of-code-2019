@@ -6,9 +6,9 @@ module Day11
   , solutionPart2
   ) where
 
-import           Data.List             (find, groupBy, sortOn, unionBy, (\\))
+import           Data.List            (find, groupBy, sortOn, unionBy, (\\))
 import           Util.CyclicEnumClass
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 
 type Position = (Int, Int)
 
@@ -93,7 +93,7 @@ paintShip robot@Robot {..}
 runPaintingRobot :: Color -> [Int] -> Either String Robot
 runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
   where
-    soft = programState prog
+    soft = newProgram prog
     pan = Panel (0, 0) startColor
 
 countPaintedPanels :: Robot -> Int

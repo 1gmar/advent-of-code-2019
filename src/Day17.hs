@@ -6,13 +6,13 @@ module Day17
   , solutionPart2
   ) where
 
-import           Data.Char             (chr, ord)
-import           Data.List             (inits, intercalate, intersperse)
-import           Data.Maybe            (listToMaybe)
-import           Data.Vector           (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
-import qualified Data.Vector           as V (concat, drop, init, length, reverse, takeWhile)
+import           Data.Char            (chr, ord)
+import           Data.List            (inits, intercalate, intersperse)
+import           Data.Maybe           (listToMaybe)
+import           Data.Vector          (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
+import qualified Data.Vector          as V (concat, drop, init, length, reverse, takeWhile)
 import           Util.CyclicEnumClass
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 import           Util.ParseUtils
 
 type View = Vector (Vector Char)
@@ -228,10 +228,10 @@ runVacuumRobot initState = do
     asciiCode = map ord . (++ "\n")
 
 wakeUpState :: [Int] -> Program
-wakeUpState prog = programState (2 : drop 1 prog)
+wakeUpState prog = newProgram (2 : drop 1 prog)
 
 solutionPart1 :: String -> Either String Int
-solutionPart1 = sumAlignParams . programState . parseIntCode
+solutionPart1 = sumAlignParams . newProgram . parseIntCode
 
 solutionPart2 :: String -> Either String Int
 solutionPart2 = runVacuumRobot . wakeUpState . parseIntCode

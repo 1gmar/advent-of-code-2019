@@ -3,10 +3,10 @@ module Day9
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 
 runBoostProgram :: [Int] -> [Int] -> ProgramResult
-runBoostProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
+runBoostProgram inputData memory = runIntCodeProgram $ programWithInput (newProgram memory) inputData
 
 solutionPart1 :: String -> Either String Int
 solutionPart1 = fmap result . runBoostProgram [1] . parseIntCode

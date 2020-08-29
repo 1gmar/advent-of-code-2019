@@ -5,10 +5,10 @@ module Day7
   , solutionPart2
   ) where
 
-import           Control.Monad         (foldM)
-import           Data.List             (maximumBy, permutations)
-import           Data.Traversable      (for)
-import           Util.IntCodeProgramV2
+import           Control.Monad       (foldM)
+import           Data.List           (maximumBy, permutations)
+import           Data.Traversable    (for)
+import           Util.IntCodeProgram
 
 type AmpChainRunner = [Int] -> [Int] -> ProgramResult
 
@@ -19,15 +19,15 @@ data Amplifier
       }
 
 runSimpleChain :: AmpChainRunner
-runSimpleChain initProg = foldM chainResult (programState initProg)
+runSimpleChain memory = foldM chainResult (newProgram memory)
   where
-    chainResult state phase = runIntCodeProgram $ programWithInput initProg [phase, result state]
+    chainResult state phase = runIntCodeProgram $ programWithInput (newProgram memory) [phase, result state]
 
 runLoopModeChain :: AmpChainRunner
 runLoopModeChain initProg phaseSetting = loopOver amplifiers
   where
     amplifiers = zipWith buildAmplifier ['A' .. 'E'] phaseSetting
-    buildAmplifier label phase = Amplifier label $ programWithInput initProg [phase]
+    buildAmplifier label phase = Amplifier label $ programWithInput (newProgram initProg) [phase]
 
 loopOver :: [Amplifier] -> ProgramResult
 loopOver [] = Left "Missing amplifier chain."

@@ -3,10 +3,10 @@ module Day5
   , solutionPart2
   ) where
 
-import           Util.IntCodeProgramV2
+import           Util.IntCodeProgram
 
 runDiagnosticProgram :: [Int] -> [Int] -> ProgramResult
-runDiagnosticProgram inputData prog = runIntCodeProgram $ programWithInput prog inputData
+runDiagnosticProgram inputData memory = runIntCodeProgram $ programWithInput (newProgram memory) inputData
 
 solutionPart1 :: String -> Either String Int
 solutionPart1 = fmap result . runDiagnosticProgram [1] . parseIntCode

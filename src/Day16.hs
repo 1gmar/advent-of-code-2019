@@ -5,14 +5,14 @@ module Day16
   , solutionPart2
   ) where
 
-import           Control.Monad       (forM_)
+import           Control.Monad       (forM_, replicateM_)
 import           Control.Monad.ST    (ST, runST)
 import           Data.Char           (digitToInt, isDigit)
 import           Data.STRef          (modifySTRef, newSTRef, readSTRef)
-import           Data.Vector         (Vector, enumFromN, fromList, iterateN, slice, thaw, unsafeFreeze, (!))
+import           Data.Vector         (Vector, enumFromN, fromList, iterateN, slice, unsafeFreeze, unsafeThaw, (!))
 import qualified Data.Vector         as V (foldl, foldr, last, length, take)
-import           Data.Vector.Mutable (STVector)
-import qualified Data.Vector.Mutable as VM (length, read, write)
+import           Data.Vector.Mutable (STVector, write)
+import           Data.Vector.Mutable as VM (length, read)
 import           Util.ParseUtils
 
 type IntVector = Vector Int
@@ -24,7 +24,7 @@ type PatternMatrix = Vector CellVector
 sparseRow :: Int -> Int -> Int -> [Int]
 sparseRow size row start = concat [intervals x | x <- take row [start ..]]
   where
-    intervals pos = takeWhile (< size) [pos - 1,pos - 1 + row * 4 ..]
+    intervals pos = takeWhile (< size) [pos - 1, pos - 1 + row * 4 ..]
 
 phasePattern :: Int -> Int -> CellVector
 phasePattern size pos = fromList $ ones ++ negativeOnes
@@ -62,20 +62,17 @@ offsetPhase stVector offset = do
   forM_ [end,end - 1 .. offset] $ \i -> do
     digit <- VM.read stVector i
     modifySTRef sumRef (sumDigits digit)
-    readSTRef sumRef >>= VM.write stVector i
+    readSTRef sumRef >>= write stVector i
   where
     sumDigits digit s = (s + digit) `mod` 10
-
-repeatM :: Monad m => Int -> m () -> m ()
-repeatM times comp = forM_ [1 .. times] $ const comp
 
 findEmbeddedMsg :: IntVector -> Int
 findEmbeddedMsg digits =
   runST $ do
     let offset = digitsToInt $ V.take 7 digits
     let realSignal = mconcat $ replicate 10000 digits
-    stVector <- thaw realSignal
-    repeatM 100 $ offsetPhase stVector offset
+    stVector <- unsafeThaw realSignal
+    replicateM_ 100 $ offsetPhase stVector offset
     vector <- unsafeFreeze stVector
     return $ readMessage offset vector
   where

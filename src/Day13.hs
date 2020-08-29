@@ -5,8 +5,8 @@ module Day13
   , solutionPart2
   ) where
 
-import           Data.List             (find, (\\))
-import           Util.IntCodeProgramV2
+import           Data.List           (find, (\\))
+import           Util.IntCodeProgram
 
 type Grid = [Cell]
 
@@ -73,7 +73,7 @@ buildGameGrid game = do
   collectGridCells game {state = nextState} (outputList nextState)
 
 startGame :: [Int] -> Game
-startGame prog = Game (programState prog) 0 []
+startGame prog = Game (newProgram prog) 0 []
 
 choosePaddleCmd :: Game -> Either String Int
 choosePaddleCmd Game {..} =
@@ -97,7 +97,7 @@ playGame game@(Game currentState _ _)
     playGame (nextGame {state = nextState {input = [paddleCmd]}})
 
 startFreeGame :: [Int] -> Game
-startFreeGame prog = Game (programState (2 : drop 1 prog)) 0 []
+startFreeGame prog = Game (newProgram (2 : drop 1 prog)) 0 []
 
 solutionPart1 :: String -> Either String Int
 solutionPart1 = fmap countBlockTiles . buildGameGrid . startGame . parseIntCode
