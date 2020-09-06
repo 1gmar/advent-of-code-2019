@@ -1,9 +1,10 @@
 module Day14Test
-  ( test
-  ) where
+  ( test,
+  )
+where
 
-import           Day14
-import           Util.UnitTest
+import Day14
+import Util.UnitTest
 
 realInput :: String
 realInput = "./resources/input/day14.txt"
@@ -78,21 +79,23 @@ test :: IO ()
 test =
   runTest
     DayTest
-      { day = 14
-      , part1 =
-          ( solutionPart1
-          , [ Assertion (Constant testCase1) (Constant $ Just 31)
-            , Assertion (Constant testCase2) (Constant $ Just 165)
-            , Assertion (Constant testCase3) (Constant $ Just 13312)
-            , Assertion (Constant testCase4) (Constant $ Just 180697)
-            , Assertion (Constant testCase5) (Constant $ Just 2210736)
-            , Assertion (fileSource realInput) (Constant $ Just 431448)
-            ])
-      , part2 =
-          ( solutionPart2
-          , [ Assertion (Constant testCase3) (Constant $ Just 82892753)
-            , Assertion (Constant testCase4) (Constant $ Just 5586022)
-            , Assertion (Constant testCase5) (Constant $ Just 460664)
-            , Assertion (fileSource realInput) (Constant $ Just 3279311)
-            ])
+      { day = 14,
+        part1 =
+          ( solutionPart1,
+            [ Assertion (Constant testCase1) (Constant $ Just 31),
+              Assertion (Constant testCase2) (Constant $ Just 165),
+              Assertion (Constant testCase3) (Constant $ Just 13312),
+              Assertion (Constant testCase4) (Constant $ Just 180697),
+              Assertion (Constant testCase5) (Constant $ Just 2210736),
+              Assertion (fileSource realInput) (Constant $ Just 431448)
+            ]
+          ),
+        part2 =
+          ( solutionPart2,
+            [ Assertion (Constant testCase3) (Constant $ Just 82892753),
+              Assertion (Constant testCase4) (Constant $ Just 5586022),
+              Assertion (Constant testCase5) (Constant $ Just 460664),
+              Assertion (fileSource realInput) (Constant $ Just 3279311)
+            ]
+          )
       }

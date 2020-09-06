@@ -1,8 +1,8 @@
 name: advent-of-code
 version: 0.1.0.0
-github: "IgorMarta/advent-of-code"
+github: 'IgorMarta/advent-of-code'
 license: BSD3
-author: "Igor Marta"
+author: 'Igor Marta'
 
 extra-source-files:
   - README.md
@@ -12,6 +12,10 @@ description: Please see the README on GitHub at <https://github.com/IgorMarta/ad
 
 dependencies:
   - base >= 4.7 && < 5
+
+default-extensions:
+  - RecordWildCards
+  - LambdaCase
 
 library:
   source-dirs: src

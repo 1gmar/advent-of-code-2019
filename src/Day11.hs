@@ -1,14 +1,17 @@
-{-# LANGUAGE DeriveAnyClass  #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Day11
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.List            (find, groupBy, sortOn, unionBy, (\\))
-import           Util.CyclicEnumClass
-import           Util.IntCodeProgram
+import Control.Monad.Except (MonadError (throwError))
+import Data.Bifunctor (bimap)
+import Data.List (find, groupBy, sortOn, unionBy, (\\))
+import Util.CyclicEnumClass
+import Util.IntCodeProgram
 
 type Position = (Int, Int)
 
@@ -26,33 +29,31 @@ data Color
   | White
   deriving (Enum, Eq)
 
-data Panel
-  = Panel
-      { position :: Position
-      , color    :: Color
-      }
+data Panel = Panel
+  { position :: Position,
+    color :: Color
+  }
 
 instance Eq Panel where
   (Panel pos1 _) == (Panel pos2 _) = pos1 == pos2
 
-data Robot
-  = Robot
-      { panel     :: Panel
-      , direction :: Direction
-      , state     :: Program
-      , grid      :: PanelGrid
-      }
+data Robot = Robot
+  { panel :: Panel,
+    direction :: Direction,
+    state :: Program,
+    grid :: PanelGrid
+  }
 
 currentColor :: Robot -> Color
 currentColor Robot {..} =
   case find (== panel) grid of
     Just (Panel _ color) -> color
-    Nothing              -> Black
+    Nothing -> Black
 
 paintCurrentPanel :: Robot -> Int -> Either String Robot
 paintCurrentPanel robot@Robot {..} colorCode
-  | colorCode `elem` [0, 1] = Right paintedPanel
-  | otherwise = Left $ "Unknown color code: " ++ show colorCode
+  | colorCode `elem` [0, 1] = return paintedPanel
+  | otherwise = throwError $ "Unknown color code: " ++ show colorCode
   where
     newColor = toEnum colorCode
     newPanel = robot {grid = Panel (position panel) newColor : grid}
@@ -62,21 +63,21 @@ paintCurrentPanel robot@Robot {..} colorCode
 rotateRobot :: Robot -> Int -> Either String Robot
 rotateRobot robot@Robot {..} directionCode =
   case directionCode of
-    0 -> Right robot {direction = cPred direction}
-    1 -> Right robot {direction = cSucc direction}
-    _ -> Left $ "Unknown direction code: " ++ show directionCode
+    0 -> return robot {direction = cPred direction}
+    1 -> return robot {direction = cSucc direction}
+    _ -> throwError $ "Unknown direction code: " ++ show directionCode
 
 moveRobot :: Robot -> Robot
 moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
   case dir of
-    LEFT  -> robot {panel = pan {position = (x - 1, y)}}
+    LEFT -> robot {panel = pan {position = (x - 1, y)}}
     RIGHT -> robot {panel = pan {position = (x + 1, y)}}
-    UP    -> robot {panel = pan {position = (x, y - 1)}}
-    DOWN  -> robot {panel = pan {position = (x, y + 1)}}
+    UP -> robot {panel = pan {position = (x, y - 1)}}
+    DOWN -> robot {panel = pan {position = (x, y + 1)}}
 
 paintShip :: Robot -> Either String Robot
 paintShip robot@Robot {..}
-  | halted state = Right robot
+  | halted state = return robot
   | otherwise = do
     let color = fromEnum $ currentColor robot
     interruptedState <- runIntCodeProgram state {input = [color]}
@@ -87,8 +88,8 @@ paintShip robot@Robot {..}
   where
     extractOutput out =
       case out of
-        [nextColor, nextDirection] -> Right (nextColor, nextDirection)
-        _                          -> Left $ "Incompatible output data: " ++ show out
+        [nextColor, nextDirection] -> return (nextColor, nextDirection)
+        _ -> throwError $ "Incompatible output data: " ++ show out
 
 runPaintingRobot :: Color -> [Int] -> Either String Robot
 runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
@@ -102,8 +103,8 @@ countPaintedPanels Robot {..} = length grid
 showPanel :: Panel -> Char
 showPanel Panel {..} =
   case color of
-    Black -> '⬜'
-    White -> '⬛'
+    Black -> '\x2B1C'
+    White -> '\x2B1B'
 
 xPos :: Panel -> Int
 xPos = fst . position
@@ -115,7 +116,8 @@ compareOn :: (Panel -> Int) -> Panel -> Panel -> Bool
 compareOn fPos panel1 panel2 = fPos panel1 == fPos panel2
 
 fillGridLine :: (Int, Int) -> PanelGrid -> PanelGrid
-fillGridLine (lower, upper) ~line@(Panel (_, y) _:_) = sortOn xPos fullLine
+fillGridLine _ [] = []
+fillGridLine (lower, upper) line@(Panel (_, y) _ : _) = sortOn xPos fullLine
   where
     fullLine = unionBy (compareOn xPos) line fillerLine
     fillerLine = map (\x -> curry (`Panel` Black) x y) [lower .. upper]
@@ -124,7 +126,7 @@ showRegistrationNumber :: Robot -> String
 showRegistrationNumber Robot {..} = unlines $ foldr showPanels [] fullGridLines
   where
     xs = map xPos grid
-    [minX, maxX] = map (\f -> f xs) [minimum, maximum]
+    (minX, maxX) = bimap (\f -> f xs) (\f -> f xs) (minimum, maximum)
     gridLines = groupBy (compareOn yPos) $ sortOn yPos grid
     fullGridLines = fillGridLine (minX, maxX) <$> gridLines
     showPanels gridRow rows = map showPanel gridRow : rows

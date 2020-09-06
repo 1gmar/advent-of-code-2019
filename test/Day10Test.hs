@@ -1,9 +1,10 @@
 module Day10Test
-  ( test
-  ) where
+  ( test,
+  )
+where
 
-import           Day10
-import           Util.UnitTest
+import Day10
+import Util.UnitTest
 
 realInput :: String
 realInput = "./resources/input/day10.txt"
@@ -82,17 +83,19 @@ test :: IO ()
 test =
   runTest
     DayTest
-      { day = 10
-      , part1 =
-          ( solutionPart1
-          , [ Assertion (Constant testCase1) (Constant 8)
-            , Assertion (Constant testCase2) (Constant 33)
-            , Assertion (Constant testCase3) (Constant 35)
-            , Assertion (Constant testCase4) (Constant 41)
-            , Assertion (Constant testCase5) (Constant 210)
-            , Assertion (fileSource realInput) (Constant 347)
-            ])
-      , part2 =
-          ( solutionPart2
-          , [Assertion (Constant testCase5) (Constant 802), Assertion (fileSource realInput) (Constant 829)])
+      { day = 10,
+        part1 =
+          ( solutionPart1,
+            [ Assertion (Constant testCase1) (Constant 8),
+              Assertion (Constant testCase2) (Constant 33),
+              Assertion (Constant testCase3) (Constant 35),
+              Assertion (Constant testCase4) (Constant 41),
+              Assertion (Constant testCase5) (Constant 210),
+              Assertion (fileSource realInput) (Constant 347)
+            ]
+          ),
+        part2 =
+          ( solutionPart2,
+            [Assertion (Constant testCase5) (Constant 802), Assertion (fileSource realInput) (Constant 829)]
+          )
       }

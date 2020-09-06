@@ -1,9 +1,10 @@
 module Day1
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Util.ParseUtils
+import Util.ParseUtils
 
 evalMass :: Int -> Int
 evalMass = subtract 2 . (`div` 3)

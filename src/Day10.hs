@@ -1,10 +1,11 @@
 module Day10
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.List       (maximumBy, sortBy, (\\))
-import           Util.ParseUtils hiding (count)
+import Data.List (maximumBy, sortBy, (\\))
+import Util.ParseUtils hiding (count)
 
 data Cell
   = Empty
@@ -83,7 +84,7 @@ inputParser = trimSpacesEOF $ rows `sepBy` endOfLine
     rows = many1 cell
     cell = readCell <$> choice [char '#', char '.']
     readCell '#' = Asteroid
-    readCell _   = Empty
+    readCell _ = Empty
 
 parseAsteroids :: String -> AsteroidMap
 parseAsteroids input = concatRows rows
@@ -91,14 +92,13 @@ parseAsteroids input = concatRows rows
     rows = parseInput inputParser input
     width = rowSize rows
     concatRows = fst . foldl (collectAsteroids width) ([], 0) . concat
-    rowSize []      = 0
-    rowSize (row:_) = length row
+    rowSize [] = 0
+    rowSize (row : _) = length row
 
 collectAsteroids :: Int -> (AsteroidMap, Int) -> Cell -> (AsteroidMap, Int)
-collectAsteroids width (asteroids, index) cell =
-  case cell of
-    Asteroid -> ((x, y) : asteroids, index + 1)
-    Empty    -> (asteroids, index + 1)
+collectAsteroids width (asteroids, index) = \case
+  Asteroid -> ((x, y) : asteroids, index + 1)
+  Empty -> (asteroids, index + 1)
   where
     y = index `div` width
     x = index - y * width

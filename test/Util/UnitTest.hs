@@ -1,37 +1,34 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Util.UnitTest
-  ( Assertion(..)
-  , Source(Constant)
-  , DayTest(..)
-  , runTest
-  , fileSource
-  , fileSourceM
-  ) where
+  ( Assertion (..),
+    Source (Constant),
+    DayTest (..),
+    runTest,
+    fileSource,
+    fileSourceM,
+  )
+where
 
-import           Control.Exception (AssertionFailed (..), throwIO)
-import           Control.Monad     (void)
+import Control.Exception (AssertionFailed (..), throwIO)
+import Control.Monad (void)
 
 data Source a
   = File String (IO a)
   | Constant a
 
 instance Show a => Show (Source a) where
-  show (File file _)       = file
+  show (File file _) = file
   show (Constant constant) = show constant
 
-data Assertion a b =
-  Assertion
-    { input    :: Source a
-    , expected :: Source b
-    }
+data Assertion a b = Assertion
+  { input :: Source a,
+    expected :: Source b
+  }
 
-data DayTest a1 a2 b1 b2 =
-  DayTest
-    { day   :: Int
-    , part1 :: (a1 -> b1, [Assertion a1 b1])
-    , part2 :: (a2 -> b2, [Assertion a2 b2])
-    }
+data DayTest a1 a2 b1 b2 = DayTest
+  { day :: Int,
+    part1 :: (a1 -> b1, [Assertion a1 b1]),
+    part2 :: (a2 -> b2, [Assertion a2 b2])
+  }
 
 fileSource :: String -> Source String
 fileSource file = File file (readFile file)
@@ -40,10 +37,9 @@ fileSourceM :: (String -> m) -> String -> Source m
 fileSourceM fM file = File file (fM <$> readFile file)
 
 readSource :: Source a -> IO a
-readSource source =
-  case source of
-    File _ sourceIO   -> sourceIO
-    Constant constant -> pure constant
+readSource = \case
+  File _ sourceIO -> sourceIO
+  Constant constant -> pure constant
 
 assert :: (Eq b, Show a, Show b) => (a -> b) -> Assertion a b -> IO ()
 assert run Assertion {..} = do

@@ -1,9 +1,10 @@
 module Day9
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Util.IntCodeProgram
+import Util.IntCodeProgram
 
 runBoostProgram :: [Int] -> [Int] -> ProgramResult
 runBoostProgram inputData memory = runIntCodeProgram $ programWithInput (newProgram memory) inputData

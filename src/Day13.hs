@@ -1,12 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Day13
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.List           (find, (\\))
-import           Util.IntCodeProgram
+import Control.Monad.Except (MonadError (throwError))
+import Data.List (find, (\\))
+import Util.IntCodeProgram
 
 type Grid = [Cell]
 
@@ -20,31 +20,29 @@ data Tile
   | Ball
   deriving (Eq)
 
-data Cell
-  = Cell
-      { position :: (Int, Int)
-      , tile     :: Tile
-      }
+data Cell = Cell
+  { position :: (Int, Int),
+    tile :: Tile
+  }
 
 instance Eq Cell where
   Cell pos1 _ == Cell pos2 _ = pos1 == pos2
 
-data Game
-  = Game
-      { state :: Program
-      , score :: Int
-      , grid  :: Grid
-      }
+data Game = Game
+  { state :: Program,
+    score :: Int,
+    grid :: Grid
+  }
 
 toTile :: Int -> Either String Tile
 toTile tileCode =
   case tileCode of
-    0 -> Right Empty
-    1 -> Right Wall
-    2 -> Right Block
-    3 -> Right Paddle
-    4 -> Right Ball
-    _ -> Left $ "Unknown tile code: " ++ show tileCode
+    0 -> return Empty
+    1 -> return Wall
+    2 -> return Block
+    3 -> return Paddle
+    4 -> return Ball
+    _ -> throwError $ "Unknown tile code: " ++ show tileCode
 
 countBlockTiles :: Game -> Int
 countBlockTiles = length . filter ((== Block) . tile) . grid
@@ -53,14 +51,14 @@ replaceCell :: Cell -> Grid -> Grid
 replaceCell newCell gameGrid =
   case find (== newCell) gameGrid of
     Just cell -> newCell : (gameGrid \\ [cell])
-    Nothing   -> newCell : gameGrid
+    Nothing -> newCell : gameGrid
 
 collectGridCells :: Game -> [Int] -> GameResult
 collectGridCells game@Game {..} outputData =
   case outputData of
-    []            -> Right game
-    x:y:value:out -> updateGame (x, y) value out
-    _             -> Left $ "Incompatible output data: " ++ show outputData
+    [] -> return game
+    x : y : value : out -> updateGame (x, y) value out
+    _ -> throwError $ "Incompatible output data: " ++ show outputData
   where
     addCell out point tileValue = collectGridCells game {grid = replaceCell (Cell point tileValue) grid} out
     updateGame point value out
@@ -78,8 +76,8 @@ startGame prog = Game (newProgram prog) 0 []
 choosePaddleCmd :: Game -> Either String Int
 choosePaddleCmd Game {..} =
   case (,) <$> xPosFor Paddle <*> xPosFor Ball of
-    Just xTuple -> Right $ compareX xTuple
-    Nothing     -> Left "Illegal grid state!"
+    Just xTuple -> return $ compareX xTuple
+    Nothing -> throwError "Illegal grid state!"
   where
     xPosFor tileVal = fst . position <$> find ((== tileVal) . tile) grid
     compareX (xPaddle, xBall)
@@ -89,7 +87,7 @@ choosePaddleCmd Game {..} =
 
 playGame :: Game -> GameResult
 playGame game@(Game currentState _ _)
-  | halted currentState = Right game
+  | halted currentState = return game
   | otherwise = do
     nextGame <- buildGameGrid game
     paddleCmd <- choosePaddleCmd nextGame

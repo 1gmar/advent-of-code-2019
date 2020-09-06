@@ -1,19 +1,20 @@
 {-# LANGUAGE TupleSections #-}
 
 module Day16
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Control.Monad       (forM_, replicateM_)
-import           Control.Monad.ST    (ST, runST)
-import           Data.Char           (digitToInt, isDigit)
-import           Data.STRef          (modifySTRef, newSTRef, readSTRef)
-import           Data.Vector         (Vector, enumFromN, fromList, iterateN, slice, unsafeFreeze, unsafeThaw, (!))
-import qualified Data.Vector         as V (foldl, foldr, last, length, take)
-import           Data.Vector.Mutable (STVector, write)
-import           Data.Vector.Mutable as VM (length, read)
-import           Util.ParseUtils
+import Control.Monad (forM_, replicateM_)
+import Control.Monad.ST (ST, runST)
+import Data.Char (digitToInt, isDigit)
+import Data.STRef (modifySTRef, newSTRef, readSTRef)
+import Data.Vector (Vector, enumFromN, fromList, iterateN, slice, unsafeFreeze, unsafeThaw, (!))
+import qualified Data.Vector as V (foldl, foldr, last, length, take)
+import Data.Vector.Mutable (STVector, write)
+import Data.Vector.Mutable as VM (length, read)
+import Util.ParseUtils
 
 type IntVector = Vector Int
 
@@ -29,8 +30,8 @@ sparseRow size row start = concat [intervals x | x <- take row [start ..]]
 phasePattern :: Int -> Int -> CellVector
 phasePattern size pos = fromList $ ones ++ negativeOnes
   where
-    ones = (, 1) <$> sparseRow size pos pos
-    negativeOnes = (, -1) <$> sparseRow size pos (pos + 2 * pos)
+    ones = (,1) <$> sparseRow size pos pos
+    negativeOnes = (,-1) <$> sparseRow size pos (pos + 2 * pos)
 
 patternMatrix :: Int -> PatternMatrix
 patternMatrix size = phasePattern size <$> enumFromN 1 size
@@ -59,7 +60,7 @@ offsetPhase :: STVector s Int -> Int -> ST s ()
 offsetPhase stVector offset = do
   let end = VM.length stVector - 1
   sumRef <- newSTRef 0
-  forM_ [end,end - 1 .. offset] $ \i -> do
+  forM_ [end, end - 1 .. offset] $ \i -> do
     digit <- VM.read stVector i
     modifySTRef sumRef (sumDigits digit)
     readSTRef sumRef >>= write stVector i

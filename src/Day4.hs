@@ -1,9 +1,10 @@
 module Day4
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.List (group)
+import Data.List (group)
 
 generatePasswords :: (Int, Int) -> [Int -> Bool] -> [Int]
 generatePasswords (lower, upper) criteria = [pass | pass <- [lower .. upper], all (\crit -> crit pass) criteria]

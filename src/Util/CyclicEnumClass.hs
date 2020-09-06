@@ -1,4 +1,4 @@
-module Util.CyclicEnumClass where
+module Util.CyclicEnumClass (CyclicEnum (..)) where
 
 class (Eq a, Enum a, Bounded a) => CyclicEnum a where
   cPred :: a -> a

@@ -1,19 +1,17 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Day12
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.Foldable   (foldl')
-import           Data.List       (findIndex, foldl1', transpose)
-import           Util.ParseUtils
+import Data.Foldable (foldl')
+import Data.List (findIndex, foldl1', transpose)
+import Util.ParseUtils
 
-data SpaceD =
-  SpaceD
-    { x  :: !Int
-    , dx :: !Int
-    }
+data SpaceD = SpaceD
+  { x :: !Int,
+    dx :: !Int
+  }
   deriving (Show)
 
 type Moon = [SpaceD]

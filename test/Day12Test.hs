@@ -1,11 +1,12 @@
 {-# LANGUAGE TupleSections #-}
 
 module Day12Test
-  ( test
-  ) where
+  ( test,
+  )
+where
 
-import           Day12
-import           Util.UnitTest
+import Day12
+import Util.UnitTest
 
 realInput :: String
 realInput = "./resources/input/day12.txt"
@@ -20,17 +21,19 @@ test :: IO ()
 test =
   runTest
     DayTest
-      { day = 12
-      , part1 =
-          ( uncurry solutionPart1
-          , [ Assertion (Constant (10, testCase1)) (Constant 179)
-            , Assertion (Constant (100, testCase2)) (Constant 1940)
-            , Assertion (fileSourceM (1000, ) realInput) (Constant 7758)
-            ])
-      , part2 =
-          ( solutionPart2
-          , [ Assertion (Constant testCase1) (Constant $ Just 2772)
-            , Assertion (Constant testCase2) (Constant $ Just 4686774924)
-            , Assertion (fileSource realInput) (Constant $ Just 354540398381256)
-            ])
+      { day = 12,
+        part1 =
+          ( uncurry solutionPart1,
+            [ Assertion (Constant (10, testCase1)) (Constant 179),
+              Assertion (Constant (100, testCase2)) (Constant 1940),
+              Assertion (fileSourceM (1000,) realInput) (Constant 7758)
+            ]
+          ),
+        part2 =
+          ( solutionPart2,
+            [ Assertion (Constant testCase1) (Constant $ Just 2772),
+              Assertion (Constant testCase2) (Constant $ Just 4686774924),
+              Assertion (fileSource realInput) (Constant $ Just 354540398381256)
+            ]
+          )
       }

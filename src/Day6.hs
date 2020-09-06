@@ -1,10 +1,11 @@
 module Day6
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.Char       (isAsciiUpper, isDigit)
-import           Util.ParseUtils hiding (count)
+import Data.Char (isAsciiUpper, isDigit)
+import Util.ParseUtils hiding (count)
 
 data OrbitTree = SpaceObject String [OrbitTree]
 
@@ -49,7 +50,7 @@ nearestCommonOrbitedObject (routeToYou, routeToSanta) =
   let zippedRoutes = routeToYou `zip` routeToSanta
       commonOrbitedObjects = map fst $ takeWhile (uncurry (==)) zippedRoutes
    in case commonOrbitedObjects of
-        []      -> "COM"
+        [] -> "COM"
         objects -> last objects
 
 minOrbitalTransfers :: (String, String) -> OrbitTree -> Int

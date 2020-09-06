@@ -1,10 +1,11 @@
 module Day8
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.List       (minimumBy)
-import           Util.ParseUtils
+import Data.List (minimumBy)
+import Util.ParseUtils
 
 data Pixel
   = Black
@@ -41,31 +42,29 @@ zipImageLayers = foldl zipLayers (repeat Transparent)
   where
     zipLayers = zipWith pixelZipper
     pixelZipper Transparent p = p
-    pixelZipper p _           = p
+    pixelZipper p _ = p
 
 showLayer :: Layer -> String
 showLayer = unlines . collectRows
   where
-    collectRows []     = []
+    collectRows [] = []
     collectRows digits = map colorPixel (take width digits) : collectRows (drop width digits)
-    colorPixel pixel =
-      case pixel of
-        Black -> '⬛'
-        _     -> '⬜'
+    colorPixel = \case
+      Black -> '\x2B1B'
+      _ -> '\x2B1C'
 
 readImage :: [Pixel] -> Image
-readImage []      = []
+readImage [] = []
 readImage rawData = take layerLength rawData : readImage (drop layerLength rawData)
 
 inputParser :: ReadP [Pixel]
 inputParser = trimSpacesEOF digits
   where
     digits = many1 $ readColor <$> choice [char '0', char '1', char '2']
-    readColor digit =
-      case digit of
-        '0' -> White
-        '1' -> Black
-        _   -> Transparent
+    readColor = \case
+      '0' -> White
+      '1' -> Black
+      _ -> Transparent
 
 parsePixels :: String -> Image
 parsePixels = readImage . parseInput inputParser

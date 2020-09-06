@@ -1,14 +1,29 @@
 module Util.ParseUtils
-  ( integer
-  , endOfLine
-  , trimSpacesEOF
-  , parseInput
-  , module Text.ParserCombinators.ReadP
-  ) where
+  ( integer,
+    endOfLine,
+    trimSpacesEOF,
+    parseInput,
+    module Text.ParserCombinators.ReadP,
+  )
+where
 
-import           Data.Char                    (isControl, isDigit)
-import           Text.ParserCombinators.ReadP (ReadP, char, choice, count, eof, many1, munch1, optional, readP_to_S,
-                                               satisfy, sepBy, skipSpaces, string, (+++))
+import Data.Char (isControl, isDigit)
+import Text.ParserCombinators.ReadP
+  ( ReadP,
+    char,
+    choice,
+    count,
+    eof,
+    many1,
+    munch1,
+    optional,
+    readP_to_S,
+    satisfy,
+    sepBy,
+    skipSpaces,
+    string,
+    (+++),
+  )
 
 endOfLine :: ReadP Char
 endOfLine = satisfy isControl

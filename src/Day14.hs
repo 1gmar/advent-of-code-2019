@@ -1,13 +1,14 @@
 module Day14
-  ( solutionPart1
-  , solutionPart2
-  ) where
+  ( solutionPart1,
+    solutionPart2,
+  )
+where
 
-import           Data.Bifunctor  (first, second)
-import           Data.Char       (isAsciiUpper)
-import           Data.List       (find, groupBy, sortOn, (\\))
-import           Data.Maybe      (listToMaybe)
-import           Util.ParseUtils
+import Data.Bifunctor (first, second)
+import Data.Char (isAsciiUpper)
+import Data.List (find, groupBy, sortOn, (\\))
+import Data.Maybe (listToMaybe)
+import Util.ParseUtils
 
 type Element = (String, Int)
 
@@ -38,7 +39,7 @@ reuseSurplus :: RecipeMap -> [Element] -> Int
 reuseSurplus recipeMap surplus =
   case listToMaybe reuseCandidates of
     Just element -> reuseSurplus recipeMap (updateSurplus element)
-    Nothing      -> maybe 0 snd $ find ((== "ORE") . fst) totals
+    Nothing -> maybe 0 snd $ find ((== "ORE") . fst) totals
   where
     totals = addUpCosts surplus
     spareLeft spareQty bSize = spareQty - bSize * (spareQty `div` bSize)
@@ -47,10 +48,10 @@ reuseSurplus recipeMap surplus =
       (label, spareLeft spareQty bSize) : mapCost spareQty bSize recipe ++ (totals \\ [(label, spareQty)])
     reuseCandidates =
       [ (label, spareQty, batchSize, recipe)
-      | (label, spareQty) <- totals
-      , ((code, batchSize), recipe) <- recipeMap
-      , code == label
-      , spareQty >= batchSize
+        | (label, spareQty) <- totals,
+          ((code, batchSize), recipe) <- recipeMap,
+          code == label,
+          spareQty >= batchSize
       ]
 
 stepInRecipe :: RecipeMap -> Element -> ([Element], Element)
@@ -67,7 +68,7 @@ computeFuelCost _ _ [] = 0
 computeFuelCost recipeMap surplus recipe =
   case recipe of
     [(_, ore)] -> ore - reusedOre
-    _          -> computeFuelCost recipeMap newSurplus recipes
+    _ -> computeFuelCost recipeMap newSurplus recipes
   where
     reusedOre = reuseSurplus recipeMap surplus
     recipeToSurplus = map (stepInRecipe recipeMap) recipe
