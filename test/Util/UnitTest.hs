@@ -42,9 +42,9 @@ readSource = \case
   Constant constant -> pure constant
 
 assert :: (Eq b, Show a, Show b) => (a -> b) -> Assertion a b -> IO ()
-assert run Assertion {..} = do
+assert solution Assertion {..} = do
   putStrLn $ "Test Case:\n" ++ show input
-  result <- run <$> readSource input
+  result <- solution <$> readSource input
   (result `shouldBe`) =<< readSource expected
   where
     errorMsg result = concat ["AssertionFailed: expected: ", show expected, ", but got: ", show result]
@@ -60,4 +60,4 @@ runTest DayTest {..} = do
   putStrLn "Part 2:\n"
   runAssertions part2
   where
-    runAssertions (run, testCases) = mapM_ (assert run) testCases
+    runAssertions (solution, testCases) = mapM_ (assert solution) testCases

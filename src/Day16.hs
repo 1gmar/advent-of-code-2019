@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Day16
   ( solutionPart1,
     solutionPart2,

@@ -29,7 +29,7 @@ instance Eq Cell where
   Cell pos1 _ == Cell pos2 _ = pos1 == pos2
 
 data Game = Game
-  { state :: Program,
+  { state :: ProgramState,
     score :: Int,
     grid :: Grid
   }

@@ -40,7 +40,7 @@ instance Eq Panel where
 data Robot = Robot
   { panel :: Panel,
     direction :: Direction,
-    state :: Program,
+    state :: ProgramState,
     grid :: PanelGrid
   }
 

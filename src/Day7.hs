@@ -13,7 +13,7 @@ type AmpChainRunner = [Int] -> [Int] -> ProgramResult
 
 data Amplifier = Amplifier
   { label :: Char,
-    softState :: Program
+    softState :: ProgramState
   }
 
 runSimpleChain :: AmpChainRunner

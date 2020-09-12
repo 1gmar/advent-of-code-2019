@@ -26,7 +26,7 @@ data Destination
 data Droid = Droid
   { direction :: Direction,
     moves :: Int,
-    state :: Program,
+    state :: ProgramState,
     destination :: Destination
   }
 

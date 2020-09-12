@@ -1,5 +1,5 @@
 module Util.IntCodeProgram
-  ( Program (input, result, halted, iPointer),
+  ( ProgramState (input, result, halted, iPointer),
     ProgramResult,
     newProgram,
     programWithInput,
@@ -21,7 +21,6 @@ import qualified Data.List.NonEmpty as NE (init)
 import Data.Tuple (swap)
 import Data.Vector.Unboxed
   ( Vector,
-    empty,
     fromList,
     modify,
     slice,
@@ -34,11 +33,15 @@ import qualified Data.Vector.Unboxed as V (length, null)
 import Data.Vector.Unboxed.Mutable (grow, write)
 import Util.ParseUtils
 
-type ProgramState = StateT Program (Either String)
+type IntCodeProgram = StateT ProgramState (Either String)
 
-type ProgramResult = Either String Program
+type ProgramResult = Either String ProgramState
 
 type Parameter = (Int, ParamMode)
+
+type ParamT2 = (Parameter, Parameter)
+
+type ParamT3 = (Parameter, Parameter, Parameter)
 
 type Operator = Int -> Int -> Int
 
@@ -48,7 +51,7 @@ type IntV = Vector Int
 
 type ArgCount = Int
 
-type EndRoutine = ProgramState ()
+type EndRoutine = IntCodeProgram ()
 
 data ParamMode
   = Position
@@ -56,41 +59,36 @@ data ParamMode
   | Relative
   deriving (Show)
 
-data Operation
-  = Add
-  | Mult
-  | Input
-  | Output
-  | JumpNEZ
-  | JumpEQZ
-  | IfLess
-  | IfEqual
-  | UpdateRelBase
-  deriving (Eq, Enum, Bounded, Show)
+data Instruction
+  = Input !Parameter
+  | Output !Parameter
+  | UpdateRelBase !Parameter
+  | JumpEQZ !ParamT2
+  | JumpNEZ !ParamT2
+  | Add !ParamT3
+  | Mult !ParamT3
+  | IfLess !ParamT3
+  | IfEqual !ParamT3
+  deriving (Show)
 
-data Instruction = Instruction !EndRoutine ![Parameter]
-
-data Program = Program
+data ProgramState = ProgramState
   { iPointer :: !Int,
     halted :: !Bool,
     input :: ![Int],
-    output :: !IntV,
+    output :: [Int],
     memory :: !IntV,
     relativeBase :: !Int,
     result :: !Int
   }
 
-opToEnum :: Int -> Operation
-opToEnum = toEnum . subtract 1
+setMemory :: ProgramState -> IntV -> ProgramState
+setMemory state memory = state {memory = memory}
 
-setMemory :: IntV -> Program -> Program
-setMemory list prog = prog {memory = list}
-
-instructionRegistry :: [(ArgCount, [Operation])]
+instructionRegistry :: [(ArgCount, [Int])]
 instructionRegistry =
-  [ (1, [Input, Output, UpdateRelBase]),
-    (2, [JumpNEZ, JumpEQZ]),
-    (3, [Add, Mult, IfLess, IfEqual])
+  [ (1, [3 {- Input -}, 4 {- Output -}, 9 {- UpdateRelBase -}]),
+    (2, [5 {- JumpNEZ -}, 6 {- JumpEQZ -}]),
+    (3, [1 {- Add -}, 2 {- Mult -}, 7 {- IfLess -}, 8 {- IfEqual -}])
   ]
 
 tokenize :: Int -> NonEmpty Int
@@ -101,11 +99,11 @@ tokenize intCode = unfoldr maybeDiv intCode
       | instr > 0 = Just <$> swap (divMod instr 10)
       | otherwise = (instr, Nothing)
 
-illegalState :: Show a => String -> a -> ProgramState b
+illegalState :: Show a => String -> a -> IntCodeProgram b
 illegalState message instr =
   gets iPointer >>= \i -> throwError $ concat [message, show instr, " at index: ", show i]
 
-toParamMode :: Int -> ProgramState ParamMode
+toParamMode :: Int -> IntCodeProgram ParamMode
 toParamMode mode =
   case mode of
     0 -> return Position
@@ -113,129 +111,116 @@ toParamMode mode =
     2 -> return Relative
     _ -> illegalState "Invalid parameter mode: " mode
 
-moveIPointerBy :: Int -> ProgramState ()
+moveIPointerBy :: Int -> IntCodeProgram ()
 moveIPointerBy value = modify' updateIPointer
   where
-    updateIPointer program@Program {..} = program {iPointer = iPointer + value}
+    updateIPointer state@ProgramState {..} = state {iPointer = iPointer + value}
 
-growList :: IntV -> Int -> IntV
-growList list by
-  | by <= 0 = list
-  | otherwise = runST $ do
-    mutList <- unsafeThaw list
-    grow mutList by >>= unsafeFreeze
-
-mutSnoc :: IntV -> Int -> IntV
-mutSnoc list value = modify writeValue newList
-  where
-    newList = growList list 1
-    index = V.length list
-    writeValue vector = write vector index value
-
-maybeGrow :: Int -> ProgramState ()
-maybeGrow index
-  | 0 <= index = extendProgram
+allocateMemIfNeeded :: Int -> IntCodeProgram ()
+allocateMemIfNeeded index
+  | 0 <= index = getMemory
   | otherwise = illegalState "Invalid negative instruction pointer: " index
   where
-    extendProgram = do
-      list <- gets memory
-      let progSize = V.length list
-      when (progSize <= index) $ modify' (setMemory $ growList list (index - progSize + 1))
+    allocMemory currentMem newSize = runST $ unsafeThaw currentMem >>= (`grow` newSize) >>= unsafeFreeze
+    getMemory = do
+      memVector <- gets memory
+      let memSize = V.length memVector
+      when (memSize <= index) $ modify' (`setMemory` allocMemory memVector (index - memSize + 1))
 
-elemAt :: Int -> ProgramState Int
-elemAt index = maybeGrow index >> gets ((! index) . memory)
+elemAt :: Int -> IntCodeProgram Int
+elemAt index = allocateMemIfNeeded index >> gets ((! index) . memory)
 
-replaceAt :: Int -> Int -> ProgramState ()
-replaceAt index value = maybeGrow index >> modify' updateProg
+replaceAt :: Int -> Int -> IntCodeProgram ()
+replaceAt index value = allocateMemIfNeeded index >> modify' updateMemory
   where
     writeValue vector = write vector index value
-    updateProg program@Program {..} = modify writeValue memory `setMemory` program
+    updateMemory state@ProgramState {..} = setMemory state $ modify writeValue memory
 
-valueOf :: Parameter -> ProgramState Int
+valueOf :: Parameter -> IntCodeProgram Int
 valueOf (param, mode) =
   case mode of
     Immediate -> return param
     Position -> elemAt param
     Relative -> gets relativeBase >>= elemAt . (+ param)
 
-indexOf :: Parameter -> ProgramState Int
+indexOf :: Parameter -> IntCodeProgram Int
 indexOf (resultP, mode) =
   case mode of
     Relative -> gets ((+ resultP) . relativeBase)
     _ -> return resultP
 
-yieldState :: Bool -> ProgramState ()
+yieldState :: Bool -> IntCodeProgram ()
 yieldState isHalted = modify' setHalted
   where
-    setHalted program = program {halted = isHalted}
+    setHalted state = state {halted = isHalted}
 
-readInput :: Instruction -> ProgramState ()
-readInput (Instruction end ~[parameter]) =
+readInput :: EndRoutine -> Parameter -> IntCodeProgram ()
+readInput end parameter =
   gets input
     >>= ( \case
             [] -> yieldState False
             value : rest -> processInput value rest
         )
   where
-    setInput value program = program {input = value}
+    setInput value state = state {input = value}
     processInput value rest = do
       resultP <- indexOf parameter
       replaceAt resultP value
       modify' (setInput rest)
       end
 
-writeOutput :: Instruction -> ProgramState ()
-writeOutput (Instruction end ~[parameter]) = do
+writeOutput :: EndRoutine -> Parameter -> IntCodeProgram ()
+writeOutput end parameter = do
   value <- valueOf parameter
   modify' (appendOutput value)
   modify' (setResult value)
   end
   where
-    setResult value program = program {result = value}
-    appendOutput value program@Program {..} = program {output = output `mutSnoc` value}
+    setResult value state = state {result = value}
+    appendOutput value state@ProgramState {..} = state {output = value : output}
 
-jumpToPointerIf :: Predicate -> Instruction -> ProgramState ()
-jumpToPointerIf predicate (Instruction end ~[param1, param2]) = valueOf param1 >>= selectEndRoutine
+jumpToPointerIf :: Predicate -> EndRoutine -> ParamT2 -> IntCodeProgram ()
+jumpToPointerIf predicate end (param1, param2) = valueOf param1 >>= selectEndRoutine
   where
-    setIPointer value program = program {iPointer = value}
+    setIPointer value state = state {iPointer = value}
     selectEndRoutine value
       | predicate value = valueOf param2 >>= modify' . setIPointer >> programStep
       | otherwise = end
 
-computeValue :: Operator -> Instruction -> ProgramState ()
-computeValue operator (Instruction end ~[param1, param2, param3]) = do
+computeValue :: Operator -> EndRoutine -> ParamT3 -> IntCodeProgram ()
+computeValue operator end (param1, param2, param3) = do
   value1 <- valueOf param1
   value2 <- valueOf param2
   resultP <- indexOf param3
   replaceAt resultP (value1 `operator` value2)
   end
 
-updateRelativeBase :: Instruction -> ProgramState ()
-updateRelativeBase (Instruction end ~[parameter]) = do
+updateRelativeBase :: EndRoutine -> Parameter -> IntCodeProgram ()
+updateRelativeBase end parameter = do
   value <- valueOf parameter
   modify' (updateBase value)
   end
   where
-    updateBase value program@Program {..} = program {relativeBase = relativeBase + value}
+    updateBase value state@ProgramState {..} = state {relativeBase = relativeBase + value}
 
-runInstruction :: (Operation, Instruction) -> ProgramState ()
-runInstruction (operation, instruction) =
-  case operation of
-    Input -> readInput instruction
-    Output -> writeOutput instruction
-    UpdateRelBase -> updateRelativeBase instruction
-    JumpNEZ -> jumpToPointerIf (/= 0) instruction
-    JumpEQZ -> jumpToPointerIf (== 0) instruction
-    IfLess -> computeValue (assert (<)) instruction
-    IfEqual -> computeValue (assert (==)) instruction
-    Add -> computeValue (+) instruction
-    Mult -> computeValue (*) instruction
+runInstruction :: (EndRoutine, Instruction) -> IntCodeProgram ()
+runInstruction (end, instruction) =
+  case instruction of
+    Input param -> readInput end param
+    Output param -> writeOutput end param
+    UpdateRelBase param -> updateRelativeBase end param
+    JumpNEZ params -> jumpToPointerIf (/= 0) end params
+    JumpEQZ params -> jumpToPointerIf (== 0) end params
+    IfLess params -> computeValue (assert (<)) end params
+    IfEqual params -> computeValue (assert (==)) end params
+    Add params -> computeValue (+) end params
+    Mult params -> computeValue (*) end params
   where
     assert cmp lhs rhs
       | lhs `cmp` rhs = 1
       | otherwise = 0
 
-buildInstruction :: [Int] -> [Int] -> ProgramState (Operation, Instruction)
+buildInstruction :: [Int] -> [Int] -> IntCodeProgram (EndRoutine, Instruction)
 buildInstruction instrTokens args =
   case instrTokens of
     [opCode] -> instructionWith opCode zeros
@@ -250,23 +235,37 @@ buildInstruction instrTokens args =
     instructionWith opCode pmCodes = do
       paramModes <- mapM toParamMode pmCodes
       let endR = endRoutineFor $ length args
-      return (opToEnum opCode, Instruction endR (args `zip` paramModes))
+      (endR,) <$> newInstruction (opCode, args `zip` paramModes)
 
-processInstruction :: Int -> ProgramState ()
+newInstruction :: (Int, [Parameter]) -> IntCodeProgram Instruction
+newInstruction opCodeToParams =
+  case opCodeToParams of
+    (3, [param]) -> return $ Input param
+    (4, [param]) -> return $ Output param
+    (9, [param]) -> return $ UpdateRelBase param
+    (5, [param1, param2]) -> return $ JumpNEZ (param1, param2)
+    (6, [param1, param2]) -> return $ JumpEQZ (param1, param2)
+    (1, [param1, param2, param3]) -> return $ Add (param1, param2, param3)
+    (2, [param1, param2, param3]) -> return $ Mult (param1, param2, param3)
+    (7, [param1, param2, param3]) -> return $ IfLess (param1, param2, param3)
+    (8, [param1, param2, param3]) -> return $ IfEqual (param1, param2, param3)
+    _ -> illegalState "Invalid instruction configuration: " opCodeToParams
+
+processInstruction :: Int -> IntCodeProgram ()
 processInstruction instr =
   case fst <$> maybeInstrPair of
     Just argsLen -> get >>= buildInstruction (NE.init tokens) . takeArgs argsLen >>= runInstruction
     Nothing -> illegalState "Illegal instruction: " instr
   where
     tokens@(opCode :| _) = tokenize instr
-    maybeInstrPair = find ((opToEnum opCode `elem`) . snd) instructionRegistry
-    takeArgs argsLen Program {..} = toList $ slice (iPointer + 1) argsLen memory
+    maybeInstrPair = find (elem opCode . snd) instructionRegistry
+    takeArgs argsLen ProgramState {..} = toList $ slice (iPointer + 1) argsLen memory
 
-programStep :: ProgramState ()
+programStep :: IntCodeProgram ()
 programStep = gets memory >>= stepInUnlessNull
   where
     stepInUnlessNull memory
-      | V.null memory = illegalState "Program memory is null: " memory
+      | V.null memory = illegalState "ProgramState memory is null: " memory
       | otherwise = gets iPointer >>= elemAt >>= stepIn
     stepIn instr
       | instr == 99 = yieldState True
@@ -277,20 +276,20 @@ parseIntCode = parseInput inputParser
   where
     inputParser = trimSpacesEOF $ integer `sepBy` char ','
 
-newProgram :: [Int] -> Program
-newProgram memory = Program 0 False [] empty (fromList memory) 0 0
-
-programMemory :: Program -> [Int]
-programMemory = toList . memory
-
-outputList :: Program -> [Int]
-outputList = toList . output
-
-runIntCodeProgram :: Program -> ProgramResult
+runIntCodeProgram :: ProgramState -> ProgramResult
 runIntCodeProgram = execStateT programStep
 
-programWithInput :: Program -> [Int] -> Program
-programWithInput program inputData = program {input = inputData}
+newProgram :: [Int] -> ProgramState
+newProgram memory = ProgramState 0 False [] [] (fromList memory) 0 0
 
-programWithOutput :: Program -> [Int] -> Program
-programWithOutput program outData = program {output = fromList outData}
+programMemory :: ProgramState -> [Int]
+programMemory = toList . memory
+
+outputList :: ProgramState -> [Int]
+outputList = reverse . output
+
+programWithInput :: ProgramState -> [Int] -> ProgramState
+programWithInput state inputData = state {input = inputData}
+
+programWithOutput :: ProgramState -> [Int] -> ProgramState
+programWithOutput state outData = state {output = outData}

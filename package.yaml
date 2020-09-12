@@ -16,6 +16,7 @@ dependencies:
 default-extensions:
   - RecordWildCards
   - LambdaCase
+  - TupleSections
 
 library:
   source-dirs: src

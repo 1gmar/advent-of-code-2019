@@ -87,7 +87,7 @@ findIntersections view = foldl findForRow [] [1 .. height - 2]
       | view !.! (i, j) == scaffold && isIntersection i j = (i, j) : iSections
       | otherwise = iSections
 
-sumAlignParams :: Program -> Either String Int
+sumAlignParams :: ProgramState -> Either String Int
 sumAlignParams = fmap (sumParams . findIntersections . parseViewList . outputList) . runIntCodeProgram
   where
     sumParams = sum . map (uncurry (*))
@@ -213,7 +213,7 @@ reducePath fullPath =
           withinBounds a b c
       ]
 
-runVacuumRobot :: Program -> Either String Int
+runVacuumRobot :: ProgramState -> Either String Int
 runVacuumRobot initState = do
   state <- runIntCodeProgram initState
   let view = (V.init . parseViewList . outputList) state
@@ -224,7 +224,7 @@ runVacuumRobot initState = do
     movementRoutines ABCPath {..} = concatMap asciiCode [mainRoutine, routineA, routineB, routineC, "n"]
     asciiCode = map ord . (++ "\n")
 
-wakeUpState :: [Int] -> Program
+wakeUpState :: [Int] -> ProgramState
 wakeUpState prog = newProgram (2 : drop 1 prog)
 
 solutionPart1 :: String -> Either String Int
