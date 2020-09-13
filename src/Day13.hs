@@ -87,7 +87,7 @@ choosePaddleCmd Game {..} =
 
 playGame :: Game -> GameResult
 playGame game@(Game currentState _ _)
-  | halted currentState = return game
+  | terminated currentState = return game
   | otherwise = do
     nextGame <- buildGameGrid game
     paddleCmd <- choosePaddleCmd nextGame

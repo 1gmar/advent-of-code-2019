@@ -31,7 +31,7 @@ loopOver :: [Amplifier] -> ProgramResult
 loopOver [] = Left "Missing amplifier chain."
 loopOver [_] = Left "Illegal amplifier setup."
 loopOver (current@(Amplifier code state) : next@Amplifier {..} : rest)
-  | code == 'E' && halted state = Right state
+  | code == 'E' && terminated state = Right state
   | code == 'A' && iPointer state == 0 = runIntCodeProgram (inSignal 0 state) >>= chainResult current
   | otherwise = runIntCodeProgram state >>= chainResult current
   where
