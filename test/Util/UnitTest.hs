@@ -1,3 +1,6 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Util.UnitTest
   ( Assertion (..),
     Source (Constant),
@@ -10,19 +13,20 @@ where
 
 import Control.Exception (AssertionFailed (..), throwIO)
 import Control.Monad (void)
+import Data.Typeable (Typeable, cast)
 
-data Source a
-  = File String (IO a)
-  | Constant a
+data Source a where
+  File :: String -> IO a -> Source a
+  Constant :: (Eq a, Show a, Typeable a) => a -> Source a
 
-instance Show a => Show (Source a) where
+instance Show (Source a) where
   show (File file _) = file
-  show (Constant constant) = show constant
+  show (Constant constant) = case cast constant of
+    Just (str :: String) -> str
+    Nothing -> show constant
 
-data Assertion a b = Assertion
-  { input :: Source a,
-    expected :: Source b
-  }
+data Assertion a b where
+  Assertion :: (Eq a, Eq b, Show a, Show b, Typeable a, Typeable b) => Source a -> Source b -> Assertion a b
 
 data DayTest a1 a2 b1 b2 = DayTest
   { day :: Int,
@@ -41,8 +45,8 @@ readSource = \case
   File _ sourceIO -> sourceIO
   Constant constant -> pure constant
 
-assert :: (Eq b, Show a, Show b) => (a -> b) -> Assertion a b -> IO ()
-assert solution Assertion {..} = do
+assert :: (a -> b) -> Assertion a b -> IO ()
+assert solution (Assertion input expected) = do
   putStrLn $ "Test Case:\n" ++ show input
   result <- solution <$> readSource input
   (result `shouldBe`) =<< readSource expected
@@ -52,7 +56,7 @@ assert solution Assertion {..} = do
       | result == expect = putStrLn "Passed!\n"
       | otherwise = void $ throwIO $ AssertionFailed (errorMsg result)
 
-runTest :: (Eq b1, Eq b2, Show a1, Show a2, Show b1, Show b2) => DayTest a1 a2 b1 b2 -> IO ()
+runTest :: DayTest a1 a2 b1 b2 -> IO ()
 runTest DayTest {..} = do
   putStrLn $ "Day " ++ show day ++ " test suite:\n"
   putStrLn "Part 1:\n"

@@ -4,7 +4,7 @@ module Day10
   )
 where
 
-import Data.List (maximumBy, sortBy, (\\))
+import Data.List (foldl', maximumBy, sortBy, (\\))
 import Util.ParseUtils hiding (count)
 
 data Cell
@@ -41,7 +41,7 @@ inSightFor asteroidMap reference@(rx, ry) target@(tx, ty)
     (dx, dy) = positionDeltaFor reference target
 
 detectAsteroidsFrom :: AsteroidMap -> Position -> (Position, Int)
-detectAsteroidsFrom asteroidMap reference = (reference, foldl countAsteroids 0 withoutRefMap)
+detectAsteroidsFrom asteroidMap reference = (reference, foldl' countAsteroids 0 withoutRefMap)
   where
     withoutRefMap = filter (/= reference) asteroidMap
     countAsteroids count target
@@ -91,7 +91,7 @@ parseAsteroids input = concatRows rows
   where
     rows = parseInput inputParser input
     width = rowSize rows
-    concatRows = fst . foldl (collectAsteroids width) ([], 0) . concat
+    concatRows = fst . foldl' (collectAsteroids width) ([], 0) . concat
     rowSize [] = 0
     rowSize (row : _) = length row
 

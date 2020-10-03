@@ -4,13 +4,13 @@ module Day4
   )
 where
 
-import Data.List (group)
+import Data.List (foldl', group)
 
 generatePasswords :: (Int, Int) -> [Int -> Bool] -> [Int]
 generatePasswords (lower, upper) criteria = [pass | pass <- [lower .. upper], all (\crit -> crit pass) criteria]
 
 increasingDigits :: Int -> Bool
-increasingDigits = and . snd . foldl currentDigitGTE ('0', []) . show
+increasingDigits = and . snd . foldl' currentDigitGTE ('0', []) . show
   where
     currentDigitGTE (prev, acc) current = (current, (current >= prev) : acc)
 

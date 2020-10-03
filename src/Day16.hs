@@ -9,7 +9,7 @@ import Control.Monad.ST (ST, runST)
 import Data.Char (digitToInt, isDigit)
 import Data.STRef (modifySTRef, newSTRef, readSTRef)
 import Data.Vector (Vector, enumFromN, fromList, iterateN, slice, unsafeFreeze, unsafeThaw, (!))
-import qualified Data.Vector as V (foldl, foldr, last, length, take)
+import qualified Data.Vector as V (foldl', foldr, last, length, take)
 import Data.Vector.Mutable (STVector, write)
 import Data.Vector.Mutable as VM (length, read)
 import Util.ParseUtils
@@ -35,7 +35,7 @@ patternMatrix :: Int -> PatternMatrix
 patternMatrix size = phasePattern size <$> enumFromN 1 size
 
 nextDigit :: IntVector -> CellVector -> Int
-nextDigit digits = (`mod` 10) . abs . V.foldl sumDigits 0
+nextDigit digits = (`mod` 10) . abs . V.foldl' sumDigits 0
   where
     sumDigits total (position, value) = total + (digits ! position * value)
 

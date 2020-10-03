@@ -8,7 +8,7 @@ where
 
 import Control.Monad.Except (MonadError (throwError))
 import Data.Char (chr, ord)
-import Data.List (inits, intercalate, intersperse)
+import Data.List (foldl', inits, intercalate, intersperse)
 import Data.Maybe (listToMaybe)
 import Data.Vector (Vector, empty, find, fromList, generate, indexed, snoc, toList, (!), (!?))
 import qualified Data.Vector as V (concat, drop, init, length, reverse, takeWhile)
@@ -72,17 +72,17 @@ toPosition index width = (row, col)
     col = index - row * width
 
 parseViewList :: [Int] -> View
-parseViewList = foldl collectRows empty . filter (not . null) . lines . map chr
+parseViewList = foldl' collectRows empty . filter (not . null) . lines . map chr
   where
     collectRows view row = view `snoc` fromList row
 
 findIntersections :: View -> [(Int, Int)]
-findIntersections view = foldl findForRow [] [1 .. height - 2]
+findIntersections view = foldl' findForRow [] [1 .. height - 2]
   where
     height = V.length view
     width = maybe 0 V.length (view !? 0)
     isIntersection i j = all (== scaffold) [view !.! pos | pos <- [(i - 1, j), (i, j - 1), (i, j + 1), (i + 1, j)]]
-    findForRow iSections row = foldl (checkCellAt row) iSections [1 .. width - 2]
+    findForRow iSections row = foldl' (checkCellAt row) iSections [1 .. width - 2]
     checkCellAt i iSections j
       | view !.! (i, j) == scaffold && isIntersection i j = (i, j) : iSections
       | otherwise = iSections

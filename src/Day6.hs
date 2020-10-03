@@ -5,6 +5,7 @@ module Day6
 where
 
 import Data.Char (isAsciiUpper, isDigit)
+import Data.List (foldl')
 import Util.ParseUtils hiding (count)
 
 data OrbitTree = SpaceObject String [OrbitTree]
@@ -17,17 +18,17 @@ type ChecksumTable = [(String, Int)]
 
 type SpaceRoute = [String]
 
-buildOrbitTree :: OrbitMap -> String -> OrbitTree
-buildOrbitTree orbitMap name = SpaceObject name objectsInOrbit
+buildOrbitTree :: String -> OrbitMap -> OrbitTree
+buildOrbitTree name orbitMap = SpaceObject name objectsInOrbit
   where
-    objectsInOrbit = map (buildOrbitTree orbitMap . snd) inOrbitObjectsMap
+    objectsInOrbit = map ((`buildOrbitTree` orbitMap) . snd) inOrbitObjectsMap
     inOrbitObjectsMap = filter ((name ==) . fst) orbitMap
 
 computeOrbitChecksum :: OrbitTree -> ChecksumTable
 computeOrbitChecksum = snd . countOrbitsFor . pure
   where
-    countOrbitsFor = foldr sumAndCache (0, [])
-    sumAndCache (SpaceObject name objectsInOrbit) (count, cache) =
+    countOrbitsFor = foldl' sumAndCache (0, [])
+    sumAndCache (count, cache) (SpaceObject name objectsInOrbit) =
       let (inOrbitCount, inOrbitCache) = countOrbitsFor objectsInOrbit
        in (count + inOrbitCount + 1, (name, inOrbitCount) : cache ++ inOrbitCache)
 
@@ -72,7 +73,7 @@ inputParser = trimSpacesEOF $ line `sepBy` endOfLine
     alphaNumUpper c = isAsciiUpper c || isDigit c
 
 solutionPart1 :: String -> Int
-solutionPart1 = countAllOrbits . flip buildOrbitTree "COM" . parseInput inputParser
+solutionPart1 = countAllOrbits . buildOrbitTree "COM" . parseInput inputParser
 
 solutionPart2 :: String -> Int
-solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . flip buildOrbitTree "COM" . parseInput inputParser
+solutionPart2 = minOrbitalTransfers ("YOU", "SAN") . buildOrbitTree "COM" . parseInput inputParser

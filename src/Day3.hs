@@ -4,6 +4,7 @@ module Day3
   )
 where
 
+import Data.List (foldl')
 import Data.Maybe (mapMaybe)
 import Util.ParseUtils
 
@@ -63,13 +64,13 @@ stepDistance lhs rhs = case (lhs, rhs) of
   _ -> Nothing
 
 minDistance :: DistanceFun -> (Line, Line) -> Int
-minDistance distFun (line1, line2) = (minimum . filter (/= 0) . foldr collect []) line2
+minDistance distFun (line1, line2) = (minimum . filter (/= 0) . foldl' collect []) line2
   where
-    collect segment acc = mapMaybe (distFun segment) (intersectsLine segment) ++ acc
+    collect acc segment = mapMaybe (distFun segment) (intersectsLine segment) ++ acc
     intersectsLine segment = filter (segment `intersects`) line1
 
 parseLine :: [(Direction, Int)] -> Line
-parseLine = fst . foldl collectSegments ([], ((0, 0), [], 0))
+parseLine = fst . foldl' collectSegments ([], ((0, 0), [], 0))
 
 collectSegments :: FoldState -> (Direction, Int) -> FoldState
 collectSegments (line, (point, cache, stepCount)) (direction, range) =

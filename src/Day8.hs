@@ -4,7 +4,7 @@ module Day8
   )
 where
 
-import Data.List (minimumBy)
+import Data.List (foldl', minimumBy)
 import Util.ParseUtils
 
 data Pixel
@@ -38,7 +38,7 @@ blackTimesTransparent :: Layer -> Int
 blackTimesTransparent layer = countPixel Black layer * countPixel Transparent layer
 
 zipImageLayers :: Image -> Layer
-zipImageLayers = foldl zipLayers (repeat Transparent)
+zipImageLayers = foldl' zipLayers (repeat Transparent)
   where
     zipLayers = zipWith pixelZipper
     pixelZipper Transparent p = p

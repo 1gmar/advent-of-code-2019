@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Day11
   ( solutionPart1,
@@ -89,7 +88,7 @@ paintShip robot@Robot {..}
     extractOutput out =
       case out of
         [nextColor, nextDirection] -> return (nextColor, nextDirection)
-        _ -> throwError $ "Incompatible output data: " ++ show out
+        _ -> Left $ "Incompatible output data: " ++ show out
 
 runPaintingRobot :: Color -> [Int] -> Either String Robot
 runPaintingRobot startColor prog = paintShip $ Robot pan UP soft [pan]
