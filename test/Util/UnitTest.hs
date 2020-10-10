@@ -1,32 +1,31 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Util.UnitTest
   ( Assertion (..),
-    Source (Constant),
+    Data (Const),
     DayTest (..),
     runTest,
-    fileSource,
-    fileSourceM,
+    fileData,
+    fileDataM,
   )
 where
 
 import Control.Exception (AssertionFailed (..), throwIO)
 import Control.Monad (void)
+import Data.Maybe (fromMaybe)
 import Data.Typeable (Typeable, cast)
 
-data Source a where
-  File :: String -> IO a -> Source a
-  Constant :: (Eq a, Show a, Typeable a) => a -> Source a
+data Data a
+  = File String (IO a)
+  | Const a
 
-instance Show (Source a) where
-  show (File file _) = file
-  show (Constant constant) = case cast constant of
-    Just (str :: String) -> str
-    Nothing -> show constant
+instance (Show a, Typeable a) => Show (Data a) where
+  show = \case
+    File file _ -> file
+    Const constant -> fromMaybe (show constant) (cast constant :: Maybe String)
 
 data Assertion a b where
-  Assertion :: (Eq a, Eq b, Show a, Show b, Typeable a, Typeable b) => Source a -> Source b -> Assertion a b
+  ShouldBe :: (Eq a, Eq b, Show a, Show b, Typeable a, Typeable b) => Data a -> Data b -> Assertion a b
 
 data DayTest a1 a2 b1 b2 = DayTest
   { day :: Int,
@@ -34,22 +33,22 @@ data DayTest a1 a2 b1 b2 = DayTest
     part2 :: (a2 -> b2, [Assertion a2 b2])
   }
 
-fileSource :: String -> Source String
-fileSource file = File file (readFile file)
+fileData :: String -> Data String
+fileData file = File file (readFile file)
 
-fileSourceM :: (String -> m) -> String -> Source m
-fileSourceM fM file = File file (fM <$> readFile file)
+fileDataM :: (String -> m) -> String -> Data m
+fileDataM fM file = File file (fM <$> readFile file)
 
-readSource :: Source a -> IO a
-readSource = \case
-  File _ sourceIO -> sourceIO
-  Constant constant -> pure constant
+readData :: Data a -> IO a
+readData = \case
+  File _ dataIO -> dataIO
+  Const constant -> pure constant
 
 assert :: (a -> b) -> Assertion a b -> IO ()
-assert solution (Assertion input expected) = do
+assert solution (ShouldBe input expected) = do
   putStrLn $ "Test Case:\n" ++ show input
-  result <- solution <$> readSource input
-  (result `shouldBe`) =<< readSource expected
+  result <- solution <$> readData input
+  (result `shouldBe`) =<< readData expected
   where
     errorMsg result = concat ["AssertionFailed: expected: ", show expected, ", but got: ", show result]
     shouldBe result expect

@@ -22,10 +22,10 @@ test =
       { day = 6,
         part1 =
           ( solutionPart1,
-            [Assertion (Constant testCase1) (Constant 42), Assertion (fileSource realInput) (Constant 314247)]
+            [Const testCase1 `ShouldBe` Const 42, fileData realInput `ShouldBe` Const 314247]
           ),
         part2 =
           ( solutionPart2,
-            [Assertion (Constant testCase2) (Constant 4), Assertion (fileSource realInput) (Constant 514)]
+            [Const testCase2 `ShouldBe` Const 4, fileData realInput `ShouldBe` Const 514]
           )
       }

@@ -22,16 +22,16 @@ test =
       { day = 12,
         part1 =
           ( uncurry solutionPart1,
-            [ Assertion (Constant (10, testCase1)) (Constant 179),
-              Assertion (Constant (100, testCase2)) (Constant 1940),
-              Assertion (fileSourceM (1000,) realInput) (Constant 7758)
+            [ Const (10, testCase1) `ShouldBe` Const 179,
+              Const (100, testCase2) `ShouldBe` Const 1940,
+              fileDataM (1000,) realInput `ShouldBe` Const 7758
             ]
           ),
         part2 =
           ( solutionPart2,
-            [ Assertion (Constant testCase1) (Constant $ Just 2772),
-              Assertion (Constant testCase2) (Constant $ Just 4686774924),
-              Assertion (fileSource realInput) (Constant $ Just 354540398381256)
+            [ Const testCase1 `ShouldBe` Const (Just 2772),
+              Const testCase2 `ShouldBe` Const (Just 4686774924),
+              fileData realInput `ShouldBe` Const (Just 354540398381256)
             ]
           )
       }

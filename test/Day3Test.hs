@@ -25,18 +25,18 @@ test =
       { day = 3,
         part1 =
           ( solutionPart1,
-            [ Assertion (Constant testCase1) (Constant $ Just 6),
-              Assertion (Constant testCase2) (Constant $ Just 159),
-              Assertion (Constant testCase3) (Constant $ Just 135),
-              Assertion (fileSource realInput) (Constant $ Just 293)
+            [ Const testCase1 `ShouldBe` Const (Just 6),
+              Const testCase2 `ShouldBe` Const (Just 159),
+              Const testCase3 `ShouldBe` Const (Just 135),
+              fileData realInput `ShouldBe` Const (Just 293)
             ]
           ),
         part2 =
           ( solutionPart2,
-            [ Assertion (Constant testCase1) (Constant $ Just 30),
-              Assertion (Constant testCase2) (Constant $ Just 610),
-              Assertion (Constant testCase3) (Constant $ Just 410),
-              Assertion (fileSource realInput) (Constant $ Just 27306)
+            [ Const testCase1 `ShouldBe` Const (Just 30),
+              Const testCase2 `ShouldBe` Const (Just 610),
+              Const testCase3 `ShouldBe` Const (Just 410),
+              fileData realInput `ShouldBe` Const (Just 27306)
             ]
           )
       }

@@ -1,1 +1,1 @@
---command="stack --no-terminal --color auto repl --pedantic --test --main-is advent-of-code:test:advent-of-code-test"
+--command="stack --no-terminal repl --pedantic --test --main-is advent-of-code:test:advent-of-code-test"

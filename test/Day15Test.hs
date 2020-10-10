@@ -14,6 +14,6 @@ test =
   runTest
     DayTest
       { day = 15,
-        part1 = (solutionPart1, [Assertion (fileSource realInput) (Constant $ return 272)]),
-        part2 = (solutionPart2, [Assertion (fileSource realInput) (Constant $ return 398)])
+        part1 = (solutionPart1, [fileData realInput `ShouldBe` Const (Right 272)]),
+        part2 = (solutionPart2, [fileData realInput `ShouldBe` Const (Right 398)])
       }

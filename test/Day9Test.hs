@@ -19,11 +19,11 @@ test =
       { day = 9,
         part1 =
           ( solutionPart1,
-            [ Assertion (Constant testCase) (Constant $ return 99),
-              Assertion (Constant "1102,34915192,34915192,7,4,7,99,0") (Constant $ return 1219070632396864),
-              Assertion (Constant "104,1125899906842624,99") (Constant $ return 1125899906842624),
-              Assertion (fileSource realInput) (Constant $ return 2752191671)
+            [ Const testCase `ShouldBe` Const (Right 99),
+              Const "1102,34915192,34915192,7,4,7,99,0" `ShouldBe` Const (Right 1219070632396864),
+              Const "104,1125899906842624,99" `ShouldBe` Const (Right 1125899906842624),
+              fileData realInput `ShouldBe` Const (Right 2752191671)
             ]
           ),
-        part2 = (solutionPart2, [Assertion (fileSource realInput) (Constant $ return 87571)])
+        part2 = (solutionPart2, [fileData realInput `ShouldBe` Const (Right 87571)])
       }

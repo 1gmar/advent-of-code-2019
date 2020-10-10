@@ -22,19 +22,19 @@ test =
       { day = 5,
         part1 =
           ( solutionPart1,
-            [ Assertion (Constant "3,9,8,9,10,9,4,9,99,-1,8") (Constant $ return 0),
-              Assertion (Constant "3,9,7,9,10,9,4,9,99,-1,8") (Constant $ return 1),
-              Assertion (Constant "3,3,1108,-1,8,3,4,3,99") (Constant $ return 0),
-              Assertion (Constant "3,3,1107,-1,8,3,4,3,99") (Constant $ return 1),
-              Assertion (fileSource realInput) (Constant $ return 15386262)
+            [ Const "3,9,8,9,10,9,4,9,99,-1,8" `ShouldBe` Const (Right 0),
+              Const "3,9,7,9,10,9,4,9,99,-1,8" `ShouldBe` Const (Right 1),
+              Const "3,3,1108,-1,8,3,4,3,99" `ShouldBe` Const (Right 0),
+              Const "3,3,1107,-1,8,3,4,3,99" `ShouldBe` Const (Right 1),
+              fileData realInput `ShouldBe` Const (Right 15386262)
             ]
           ),
         part2 =
           ( solutionPart2,
-            [ Assertion (Constant "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9") (Constant $ return 1),
-              Assertion (Constant "3,3,1105,-1,9,1101,0,0,12,4,12,99,1") (Constant $ return 1),
-              Assertion (Constant testCase) (Constant $ return 999),
-              Assertion (fileSource realInput) (Constant $ return 10376124)
+            [ Const "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9" `ShouldBe` Const (Right 1),
+              Const "3,3,1105,-1,9,1101,0,0,12,4,12,99,1" `ShouldBe` Const (Right 1),
+              Const testCase `ShouldBe` Const (Right 999),
+              fileData realInput `ShouldBe` Const (Right 10376124)
             ]
           )
       }

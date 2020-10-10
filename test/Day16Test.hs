@@ -34,18 +34,18 @@ test =
       { day = 16,
         part1 =
           ( solutionPart1,
-            [ Assertion (Constant testCase1) (Constant 24176176),
-              Assertion (Constant testCase2) (Constant 73745418),
-              Assertion (Constant testCase3) (Constant 52432133),
-              Assertion (fileSource realInput) (Constant 84487724)
+            [ Const testCase1 `ShouldBe` Const 24176176,
+              Const testCase2 `ShouldBe` Const 73745418,
+              Const testCase3 `ShouldBe` Const 52432133,
+              fileData realInput `ShouldBe` Const 84487724
             ]
           ),
         part2 =
           ( solutionPart2,
-            [ Assertion (Constant testCase4) (Constant 84462026),
-              Assertion (Constant testCase5) (Constant 78725270),
-              Assertion (Constant testCase6) (Constant 53553731),
-              Assertion (fileSource realInput) (Constant 84692524)
+            [ Const testCase4 `ShouldBe` Const 84462026,
+              Const testCase5 `ShouldBe` Const 78725270,
+              Const testCase6 `ShouldBe` Const 53553731,
+              fileData realInput `ShouldBe` Const 84692524
             ]
           )
       }

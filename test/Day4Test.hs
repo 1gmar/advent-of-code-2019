@@ -11,6 +11,6 @@ test =
   runTest
     DayTest
       { day = 4,
-        part1 = (solutionPart1, [Assertion (Constant (134792, 675810)) (Constant 1955)]),
-        part2 = (solutionPart2, [Assertion (Constant (134792, 675810)) (Constant 1319)])
+        part1 = (solutionPart1, [Const (134792, 675810) `ShouldBe` Const 1955]),
+        part2 = (solutionPart2, [Const (134792, 675810) `ShouldBe` Const 1319])
       }

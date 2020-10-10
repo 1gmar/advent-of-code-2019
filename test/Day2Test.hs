@@ -16,11 +16,11 @@ test =
       { day = 2,
         part1 =
           ( solutionPart1,
-            [ Assertion (Constant "1,9,10,3,2,3,11,0,99,30,40,50") (Constant $ Right 3500),
-              Assertion (Constant "1,0,0,0,99") (Constant $ Right 2),
-              Assertion (Constant "1,1,1,4,99,5,6,0,99") (Constant $ Right 30),
-              Assertion (fileSource realInput) (Constant $ Right 3716293)
+            [ Const "1,9,10,3,2,3,11,0,99,30,40,50" `ShouldBe` Const (Right 3500),
+              Const "1,0,0,0,99" `ShouldBe` Const (Right 2),
+              Const "1,1,1,4,99,5,6,0,99" `ShouldBe` Const (Right 30),
+              fileData realInput `ShouldBe` Const (Right 3716293)
             ]
           ),
-        part2 = (solutionPart2, [Assertion (fileSource realInput) (Constant $ Right 6429)])
+        part2 = (solutionPart2, [fileData realInput `ShouldBe` Const (Right 6429)])
       }
