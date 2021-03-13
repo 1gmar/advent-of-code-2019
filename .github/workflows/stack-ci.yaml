@@ -15,7 +15,6 @@ jobs:
         with:
           enable-stack: true
           stack-no-global: true
-          stack-setup-ghc: true
           stack-version: '2.5.1'
 
       - name: Build & run tests
