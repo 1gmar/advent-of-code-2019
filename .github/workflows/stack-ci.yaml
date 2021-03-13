@@ -11,10 +11,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup stack
-        uses: mstksg/setup-stack@v2
-
-      - name: Setup GHC
-        run: stack --no-terminal setup
+        uses: actions/setup-haskell@v1.1.4
+        with:
+          enable-stack: true
+          stack-no-global: true
+          stack-setup-ghc: true
+          stack-version: '2.5.1'
 
       - name: Build & run tests
         run: stack --no-terminal test
