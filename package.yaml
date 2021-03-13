@@ -1,6 +1,6 @@
 name: advent-of-code
 version: 0.1.0.0
-github: 'IgorMarta/advent-of-code'
+github: '1gmar/advent-of-code-2019'
 license: BSD3
 author: 'Igor Marta'
 
@@ -8,7 +8,7 @@ extra-source-files:
   - README.md
   - ChangeLog.md
 
-description: Please see the README on GitHub at <https://github.com/IgorMarta/advent-of-code#readme>
+description: Please see the README on GitHub at <https://github.com/1gmar/advent-of-code-2019#readme>
 
 dependencies:
   - base >= 4.7 && < 5
