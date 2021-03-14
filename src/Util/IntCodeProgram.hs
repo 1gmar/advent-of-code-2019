@@ -14,10 +14,8 @@ where
 import Control.Monad (when)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.ST (runST)
-import Control.Monad.State (StateT, execStateT, get, gets, modify')
-import Data.List (find)
+import Control.Monad.State (StateT, execStateT, gets, modify')
 import Data.List.NonEmpty (NonEmpty (..), unfoldr)
-import qualified Data.List.NonEmpty as NE (init)
 import Data.Tuple (swap)
 import Data.Vector.Unboxed
   ( Vector,
@@ -39,21 +37,11 @@ type ProgramResult = Either String ProgramState
 
 type Parameter = (Int, ParamMode)
 
-type ParamT2 = (Parameter, Parameter)
-
-type ParamT3 = (Parameter, Parameter, Parameter)
-
 type Operator = Int -> Int -> Int
 
 type Predicate = Int -> Bool
 
 type IntV = Vector Int
-
-type InstrCode = Int
-
-type ArgCount = Int
-
-type EndRoutine = IntCodeProgram ()
 
 data ParamMode
   = Position
@@ -74,20 +62,12 @@ data ProgramState = ProgramState
 setMemory :: ProgramState -> IntV -> ProgramState
 setMemory state memory = state {memory = memory}
 
-instructionRegistry :: [(ArgCount, [InstrCode])]
-instructionRegistry =
-  [ (1, [3 {- Input -}, 4 {- Output -}, 9 {- UpdateRelBase -}]),
-    (2, [5 {- JumpNEZ -}, 6 {- JumpEQZ -}]),
-    (3, [1 {- Add -}, 2 {- Mult -}, 7 {- IfLess -}, 8 {- IfEqual -}])
-  ]
-
 tokenize :: Int -> NonEmpty Int
-tokenize 0 = 0 :| []
-tokenize intCode = unfoldr maybeDiv intCode
+tokenize = unfoldr maybeDiv
   where
     maybeDiv instr
-      | instr > 0 = Just <$> swap (divMod instr 10)
-      | otherwise = (instr, Nothing)
+      | instr < 10 = (instr, Nothing)
+      | otherwise = Just <$> swap (divMod instr 10)
 
 illegalState :: Show a => String -> a -> IntCodeProgram b
 illegalState message instr =
@@ -142,8 +122,8 @@ indexOf (resultP, mode) =
 yieldState :: Bool -> IntCodeProgram ()
 yieldState isTerminated = modify' (\s -> s {terminated = isTerminated})
 
-readInput :: EndRoutine -> Parameter -> IntCodeProgram ()
-readInput end parameter =
+readInput :: [Parameter] -> IntCodeProgram ()
+readInput ~[parameter] =
   gets input
     >>= ( \case
             [] -> yieldState False
@@ -154,82 +134,80 @@ readInput end parameter =
       resultP <- indexOf parameter
       writeMemAt resultP value
       modify' (\s -> s {input = rest})
-      end
+      moveIPointerBy 2
+      nextInstruction
 
-writeOutput :: EndRoutine -> Parameter -> IntCodeProgram ()
-writeOutput end parameter = do
+writeOutput :: [Parameter] -> IntCodeProgram ()
+writeOutput ~[parameter] = do
   value <- valueOf parameter
   modify' (appendOutput value)
   modify' (\s -> s {result = value})
-  end
+  moveIPointerBy 2
+  nextInstruction
   where
     appendOutput value state@ProgramState {..} = state {output = value : output}
 
-updateRelativeBase :: EndRoutine -> Parameter -> IntCodeProgram ()
-updateRelativeBase end parameter = do
+updateRelativeBase :: [Parameter] -> IntCodeProgram ()
+updateRelativeBase ~[parameter] = do
   value <- valueOf parameter
   modify' (updateBase value)
-  end
+  moveIPointerBy 2
+  nextInstruction
   where
     updateBase value state@ProgramState {..} = state {relativeBase = relativeBase + value}
 
-jumpToPointerIf :: Predicate -> EndRoutine -> ParamT2 -> IntCodeProgram ()
-jumpToPointerIf predicate end (param1, param2) = valueOf param1 >>= selectEndRoutine
+jumpToPointerIf :: Predicate -> [Parameter] -> IntCodeProgram ()
+jumpToPointerIf predicate ~[param1, param2] = do
+  value1 <- valueOf param1
+  value2 <- valueOf param2
+  if predicate value1 then modify' (setIPointer value2) else moveIPointerBy 3
+  nextInstruction
   where
     setIPointer value state = state {iPointer = value}
-    selectEndRoutine value
-      | predicate value = valueOf param2 >>= modify' . setIPointer >> nextInstruction
-      | otherwise = end
 
-computeValue :: Operator -> EndRoutine -> ParamT3 -> IntCodeProgram ()
-computeValue operator end (param1, param2, param3) = do
+computeValue :: Operator -> [Parameter] -> IntCodeProgram ()
+computeValue operator ~[param1, param2, param3] = do
   value1 <- valueOf param1
   value2 <- valueOf param2
   resultP <- indexOf param3
   writeMemAt resultP (value1 `operator` value2)
-  end
+  moveIPointerBy 4
+  nextInstruction
 
-runInstruction :: (InstrCode, [Parameter]) -> IntCodeProgram ()
-runInstruction codeToParams@(_, params) =
-  case codeToParams of
-    (3, [param]) -> readInput endRoutine param
-    (4, [param]) -> writeOutput endRoutine param
-    (9, [param]) -> updateRelativeBase endRoutine param
-    (5, [param1, param2]) -> jumpToPointerIf (/= 0) endRoutine (param1, param2)
-    (6, [param1, param2]) -> jumpToPointerIf (== 0) endRoutine (param1, param2)
-    (1, [param1, param2, param3]) -> computeValue (+) endRoutine (param1, param2, param3)
-    (2, [param1, param2, param3]) -> computeValue (*) endRoutine (param1, param2, param3)
-    (7, [param1, param2, param3]) -> computeValue (assert (<)) endRoutine (param1, param2, param3)
-    (8, [param1, param2, param3]) -> computeValue (assert (==)) endRoutine (param1, param2, param3)
-    _ -> illegalState "Invalid instruction configuration: " codeToParams
+getParamModes :: [Int] -> IntCodeProgram [Int]
+getParamModes pmCodes =
+  case pmCodes of
+    [] -> return zeros
+    0 : modes -> return $ modes ++ zeros
+    _ -> illegalState "Invalid parameter mode configuration: " pmCodes
   where
-    endRoutine = moveIPointerBy (length params + 1) >> nextInstruction
-    assert cmp lhs rhs
-      | lhs `cmp` rhs = 1
-      | otherwise = 0
+    zeros = replicate 4 0
 
-parseParamModes :: [Int] -> [Int] -> IntCodeProgram (InstrCode, [Parameter])
-parseParamModes instrTokens args =
-  case instrTokens of
-    [instrCode] -> codeToParams instrCode zeros
-    [instrCode, 0] -> codeToParams instrCode zeros
-    [instrCode, 0, pmCode] -> codeToParams instrCode (pmCode : zeros)
-    [instrCode, 0, pmCode1, pmCode2] -> codeToParams instrCode (pmCode1 : pmCode2 : zeros)
-    [instrCode, 0, pmCode1, pmCode2, pmCode3] -> codeToParams instrCode (pmCode1 : pmCode2 : pmCode3 : zeros)
-    _ -> illegalState "Invalid instruction format: " instrTokens
+runInstruction :: [Int] -> Int -> ([Parameter] -> IntCodeProgram ()) -> IntCodeProgram ()
+runInstruction pmCodes argsLen instruction = do
+  args <- gets takeArgs
+  params <- zip args <$> (getParamModes pmCodes >>= mapM toParamMode)
+  instruction params
   where
-    zeros = replicate (length args) 0
-    codeToParams instrCode pmCodes = (instrCode,) . zip args <$> mapM toParamMode pmCodes
+    takeArgs ProgramState {..} = toList $ slice (iPointer + 1) argsLen memory
 
 processInstruction :: Int -> IntCodeProgram ()
 processInstruction instr =
-  case fst <$> maybeInstrPair of
-    Just argsLen -> get >>= parseParamModes (NE.init tokens) . takeArgs argsLen >>= runInstruction
-    Nothing -> illegalState "Unrecognized instruction code: " instr
+  case tokenize instr of
+    (3 :| pmCodes) -> runInstruction pmCodes 1 readInput
+    (4 :| pmCodes) -> runInstruction pmCodes 1 writeOutput
+    (9 :| pmCodes) -> runInstruction pmCodes 1 updateRelativeBase
+    (5 :| pmCodes) -> runInstruction pmCodes 2 $ jumpToPointerIf (/= 0)
+    (6 :| pmCodes) -> runInstruction pmCodes 2 $ jumpToPointerIf (== 0)
+    (1 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (+)
+    (2 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (*)
+    (7 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (assert (<))
+    (8 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (assert (==))
+    _ -> illegalState "Unrecognized instruction code: " instr
   where
-    tokens@(instrCode :| _) = tokenize instr
-    maybeInstrPair = find (elem instrCode . snd) instructionRegistry
-    takeArgs argsLen ProgramState {..} = toList $ slice (iPointer + 1) argsLen memory
+    assert cmp lhs rhs
+      | lhs `cmp` rhs = 1
+      | otherwise = 0
 
 nextInstruction :: IntCodeProgram ()
 nextInstruction = gets memory >>= tryNextInstruction
