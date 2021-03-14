@@ -17,5 +17,8 @@ jobs:
           stack-no-global: true
           stack-version: '2.5.1'
 
-      - name: Build & run tests
+      - name: Build
+        run: stack --no-terminal build
+
+      - name: Run Tests
         run: stack --no-terminal test
