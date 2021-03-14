@@ -27,7 +27,7 @@ import Data.Vector.Unboxed
     unsafeThaw,
     (!),
   )
-import qualified Data.Vector.Unboxed as V (length, null)
+import qualified Data.Vector.Unboxed as V (length)
 import Data.Vector.Unboxed.Mutable (grow, write)
 import Util.ParseUtils
 
@@ -81,11 +81,6 @@ toParamMode mode =
     2 -> return Relative
     _ -> illegalState "Invalid parameter mode: " mode
 
-moveIPointerBy :: Int -> IntCodeProgram ()
-moveIPointerBy value = modify' updateIPointer
-  where
-    updateIPointer state@ProgramState {..} = state {iPointer = iPointer + value}
-
 allocateMemIfNeeded :: Int -> IntCodeProgram ()
 allocateMemIfNeeded index
   | 0 <= index = getMemory
@@ -134,16 +129,14 @@ readInput ~[parameter] =
       resultP <- indexOf parameter
       writeMemAt resultP value
       modify' (\s -> s {input = rest})
-      moveIPointerBy 2
-      nextInstruction
+      nextInstruction 2
 
 writeOutput :: [Parameter] -> IntCodeProgram ()
 writeOutput ~[parameter] = do
   value <- valueOf parameter
   modify' (appendOutput value)
   modify' (\s -> s {result = value})
-  moveIPointerBy 2
-  nextInstruction
+  nextInstruction 2
   where
     appendOutput value state@ProgramState {..} = state {output = value : output}
 
@@ -151,8 +144,7 @@ updateRelativeBase :: [Parameter] -> IntCodeProgram ()
 updateRelativeBase ~[parameter] = do
   value <- valueOf parameter
   modify' (updateBase value)
-  moveIPointerBy 2
-  nextInstruction
+  nextInstruction 2
   where
     updateBase value state@ProgramState {..} = state {relativeBase = relativeBase + value}
 
@@ -160,8 +152,7 @@ jumpToPointerIf :: Predicate -> [Parameter] -> IntCodeProgram ()
 jumpToPointerIf predicate ~[param1, param2] = do
   value1 <- valueOf param1
   value2 <- valueOf param2
-  if predicate value1 then modify' (setIPointer value2) else moveIPointerBy 3
-  nextInstruction
+  if predicate value1 then modify' (setIPointer value2) >> nextInstruction 0 else nextInstruction 3
   where
     setIPointer value state = state {iPointer = value}
 
@@ -171,8 +162,7 @@ computeValue operator ~[param1, param2, param3] = do
   value2 <- valueOf param2
   resultP <- indexOf param3
   writeMemAt resultP (value1 `operator` value2)
-  moveIPointerBy 4
-  nextInstruction
+  nextInstruction 4
 
 getParamModes :: [Int] -> IntCodeProgram [Int]
 getParamModes pmCodes =
@@ -209,15 +199,13 @@ processInstruction instr =
       | lhs `cmp` rhs = 1
       | otherwise = 0
 
-nextInstruction :: IntCodeProgram ()
-nextInstruction = gets memory >>= tryNextInstruction
+nextInstruction :: Int -> IntCodeProgram ()
+nextInstruction iPtrStep = do
+  moveIPointer
+  instr <- gets iPointer >>= readMemAt
+  if instr == 99 then yieldState True else processInstruction instr
   where
-    tryNextInstruction memory
-      | V.null memory = illegalState "Program memory is null: " memory
-      | otherwise = gets iPointer >>= readMemAt >>= handleInstruction
-    handleInstruction instr
-      | instr == 99 = yieldState True
-      | otherwise = processInstruction instr
+    moveIPointer = modify' (\s@ProgramState {..} -> s {iPointer = iPointer + iPtrStep})
 
 parseIntCode :: String -> [Int]
 parseIntCode = parseInput inputParser
@@ -225,7 +213,7 @@ parseIntCode = parseInput inputParser
     inputParser = trimSpacesEOF $ integer `sepBy` char ','
 
 runIntCodeProgram :: ProgramState -> ProgramResult
-runIntCodeProgram = execStateT nextInstruction
+runIntCodeProgram = execStateT $ nextInstruction 0
 
 newProgram :: [Int] -> ProgramState
 newProgram memory = ProgramState 0 False [] [] (fromList memory) 0 0
