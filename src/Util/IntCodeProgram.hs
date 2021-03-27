@@ -11,24 +11,12 @@ module Util.IntCodeProgram
   )
 where
 
-import Control.Monad (when)
+import Control.Monad (unless)
 import Control.Monad.Except (MonadError (throwError))
-import Control.Monad.ST (runST)
 import Control.Monad.State (StateT, execStateT, gets, modify')
+import Data.HashMap.Strict (HashMap, elems, fromList, insert, member, (!))
 import Data.List.NonEmpty (NonEmpty (..), unfoldr)
 import Data.Tuple (swap)
-import Data.Vector.Unboxed
-  ( Vector,
-    fromList,
-    modify,
-    slice,
-    toList,
-    unsafeFreeze,
-    unsafeThaw,
-    (!),
-  )
-import qualified Data.Vector.Unboxed as V (length)
-import Data.Vector.Unboxed.Mutable (grow, write)
 import Util.ParseUtils
 
 type IntCodeProgram = StateT ProgramState (Either String)
@@ -41,7 +29,7 @@ type Operator = Int -> Int -> Int
 
 type Predicate = Int -> Bool
 
-type IntV = Vector Int
+type Memory = HashMap Int Int
 
 data ParamMode
   = Position
@@ -54,13 +42,10 @@ data ProgramState = ProgramState
     terminated :: !Bool,
     input :: ![Int],
     output :: [Int],
-    memory :: !IntV,
+    memory :: !Memory,
     relativeBase :: !Int,
     result :: !Int
   }
-
-setMemory :: ProgramState -> IntV -> ProgramState
-setMemory state memory = state {memory = memory}
 
 tokenize :: Int -> NonEmpty Int
 tokenize = unfoldr maybeDiv
@@ -81,25 +66,16 @@ toParamMode mode =
     2 -> return Relative
     _ -> illegalState "Invalid parameter mode: " mode
 
-allocateMemIfNeeded :: Int -> IntCodeProgram ()
-allocateMemIfNeeded index
-  | 0 <= index = getMemory
-  | otherwise = illegalState "Invalid negative instruction pointer: " index
-  where
-    allocMemory currentMem newSize = runST $ unsafeThaw currentMem >>= (`grow` newSize) >>= unsafeFreeze
-    getMemory = do
-      memVector <- gets memory
-      let memSize = V.length memVector
-      when (memSize <= index) $ modify' (`setMemory` allocMemory memVector (index - memSize + 1))
-
 readMemAt :: Int -> IntCodeProgram Int
-readMemAt index = allocateMemIfNeeded index >> gets ((! index) . memory)
+readMemAt index = do
+  mem <- gets memory
+  unless (index `member` mem) $ writeMemAt index 0
+  gets ((! index) . memory)
 
 writeMemAt :: Int -> Int -> IntCodeProgram ()
-writeMemAt index value = allocateMemIfNeeded index >> modify' updateMemory
+writeMemAt index value = gets memory >>= modify' . insertValue
   where
-    writeValue vector = write vector index value
-    updateMemory state@ProgramState {..} = setMemory state $ modify writeValue memory
+    insertValue mem = \s -> s {memory = insert index value mem}
 
 valueOf :: Parameter -> IntCodeProgram Int
 valueOf (param, mode) =
@@ -122,39 +98,35 @@ readInput ~[parameter] =
   gets input
     >>= ( \case
             [] -> yieldState False
-            value : rest -> processInput value rest
+            params -> processInput params
         )
   where
-    processInput value rest = do
+    processInput ~(value : rest) = do
       resultP <- indexOf parameter
       writeMemAt resultP value
       modify' (\s -> s {input = rest})
-      nextInstruction 2
+      nextInstructionWithStep 2
 
 writeOutput :: [Parameter] -> IntCodeProgram ()
 writeOutput ~[parameter] = do
   value <- valueOf parameter
-  modify' (appendOutput value)
+  modify' (\s@ProgramState {..} -> s {output = value : output})
   modify' (\s -> s {result = value})
-  nextInstruction 2
-  where
-    appendOutput value state@ProgramState {..} = state {output = value : output}
+  nextInstructionWithStep 2
 
 updateRelativeBase :: [Parameter] -> IntCodeProgram ()
 updateRelativeBase ~[parameter] = do
   value <- valueOf parameter
-  modify' (updateBase value)
-  nextInstruction 2
-  where
-    updateBase value state@ProgramState {..} = state {relativeBase = relativeBase + value}
+  modify' (\s@ProgramState {..} -> s {relativeBase = relativeBase + value})
+  nextInstructionWithStep 2
 
 jumpToPointerIf :: Predicate -> [Parameter] -> IntCodeProgram ()
 jumpToPointerIf predicate ~[param1, param2] = do
   value1 <- valueOf param1
   value2 <- valueOf param2
-  if predicate value1 then modify' (setIPointer value2) >> nextInstruction 0 else nextInstruction 3
-  where
-    setIPointer value state = state {iPointer = value}
+  if predicate value1
+    then modify' (\s -> s {iPointer = value2}) >> nextInstruction
+    else nextInstructionWithStep 3
 
 computeValue :: Operator -> [Parameter] -> IntCodeProgram ()
 computeValue operator ~[param1, param2, param3] = do
@@ -162,10 +134,10 @@ computeValue operator ~[param1, param2, param3] = do
   value2 <- valueOf param2
   resultP <- indexOf param3
   writeMemAt resultP (value1 `operator` value2)
-  nextInstruction 4
+  nextInstructionWithStep 4
 
-getParamModes :: [Int] -> IntCodeProgram [Int]
-getParamModes pmCodes =
+padPmCodes :: [Int] -> IntCodeProgram [Int]
+padPmCodes pmCodes =
   case pmCodes of
     [] -> return zeros
     0 : modes -> return $ modes ++ zeros
@@ -176,10 +148,10 @@ getParamModes pmCodes =
 runInstruction :: [Int] -> Int -> ([Parameter] -> IntCodeProgram ()) -> IntCodeProgram ()
 runInstruction pmCodes argsLen instruction = do
   args <- gets takeArgs
-  params <- zip args <$> (getParamModes pmCodes >>= mapM toParamMode)
+  params <- zip args <$> (padPmCodes pmCodes >>= mapM toParamMode)
   instruction params
   where
-    takeArgs ProgramState {..} = toList $ slice (iPointer + 1) argsLen memory
+    takeArgs ProgramState {..} = map (memory !) $ take argsLen [iPointer + 1 ..]
 
 processInstruction :: Int -> IntCodeProgram ()
 processInstruction instr =
@@ -199,13 +171,15 @@ processInstruction instr =
       | lhs `cmp` rhs = 1
       | otherwise = 0
 
-nextInstruction :: Int -> IntCodeProgram ()
-nextInstruction iPtrStep = do
-  moveIPointer
-  instr <- gets iPointer >>= readMemAt
-  if instr == 99 then yieldState True else processInstruction instr
+nextInstructionWithStep :: Int -> IntCodeProgram ()
+nextInstructionWithStep iPtrStep = moveIPointer >> nextInstruction
   where
     moveIPointer = modify' (\s@ProgramState {..} -> s {iPointer = iPointer + iPtrStep})
+
+nextInstruction :: IntCodeProgram ()
+nextInstruction = do
+  instr <- gets iPointer >>= readMemAt
+  if instr == 99 then yieldState True else processInstruction instr
 
 parseIntCode :: String -> [Int]
 parseIntCode = parseInput inputParser
@@ -213,13 +187,13 @@ parseIntCode = parseInput inputParser
     inputParser = trimSpacesEOF $ integer `sepBy` char ','
 
 runIntCodeProgram :: ProgramState -> ProgramResult
-runIntCodeProgram = execStateT $ nextInstruction 0
+runIntCodeProgram = execStateT nextInstruction
 
 newProgram :: [Int] -> ProgramState
-newProgram memory = ProgramState 0 False [] [] (fromList memory) 0 0
+newProgram memory = ProgramState 0 False [] [] (fromList (zip [0 ..] memory)) 0 0
 
 programMemory :: ProgramState -> [Int]
-programMemory = toList . memory
+programMemory = elems . memory
 
 outputList :: ProgramState -> [Int]
 outputList = reverse . output
