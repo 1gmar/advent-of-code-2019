@@ -5,7 +5,7 @@ module Util.IntCodeProgram
     programWithInput,
     programWithOutput,
     parseIntCode,
-    programMemory,
+    firstMemoryCell,
     outputList,
     runIntCodeProgram,
   )
@@ -16,6 +16,7 @@ import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.State (StateT, execStateT, gets, modify')
 import Data.HashMap.Strict (HashMap, elems, fromList, insert, member, (!))
 import Data.List.NonEmpty (NonEmpty (..), unfoldr)
+import Data.Maybe (listToMaybe)
 import Data.Tuple (swap)
 import Util.ParseUtils
 
@@ -35,7 +36,6 @@ data ParamMode
   = Position
   | Immediate
   | Relative
-  deriving (Show)
 
 data ProgramState = ProgramState
   { iPointer :: !Int,
@@ -75,7 +75,7 @@ readMemAt index = do
 writeMemAt :: Int -> Int -> IntCodeProgram ()
 writeMemAt index value = gets memory >>= modify' . insertValue
   where
-    insertValue mem = \s -> s {memory = insert index value mem}
+    insertValue mem s = s {memory = insert index value mem}
 
 valueOf :: Parameter -> IntCodeProgram Int
 valueOf (param, mode) =
@@ -93,43 +93,39 @@ indexOf (resultP, mode) =
 yieldState :: Bool -> IntCodeProgram ()
 yieldState isTerminated = modify' (\s -> s {terminated = isTerminated})
 
-readInput :: [Parameter] -> IntCodeProgram ()
-readInput ~[parameter] =
-  gets input
-    >>= ( \case
-            [] -> yieldState False
-            params -> processInput params
-        )
-  where
-    processInput ~(value : rest) = do
+readInput :: Parameter -> IntCodeProgram ()
+readInput parameter =
+  gets input >>= \case
+    [] -> yieldState False
+    (value : rest) -> do
       resultP <- indexOf parameter
       writeMemAt resultP value
       modify' (\s -> s {input = rest})
       nextInstructionWithStep 2
 
-writeOutput :: [Parameter] -> IntCodeProgram ()
-writeOutput ~[parameter] = do
+writeOutput :: Parameter -> IntCodeProgram ()
+writeOutput parameter = do
   value <- valueOf parameter
   modify' (\s@ProgramState {..} -> s {output = value : output})
   modify' (\s -> s {result = value})
   nextInstructionWithStep 2
 
-updateRelativeBase :: [Parameter] -> IntCodeProgram ()
-updateRelativeBase ~[parameter] = do
+updateRelativeBase :: Parameter -> IntCodeProgram ()
+updateRelativeBase parameter = do
   value <- valueOf parameter
   modify' (\s@ProgramState {..} -> s {relativeBase = relativeBase + value})
   nextInstructionWithStep 2
 
-jumpToPointerIf :: Predicate -> [Parameter] -> IntCodeProgram ()
-jumpToPointerIf predicate ~[param1, param2] = do
+jumpToPointerIf :: Predicate -> (Parameter, Parameter) -> IntCodeProgram ()
+jumpToPointerIf predicate (param1, param2) = do
   value1 <- valueOf param1
   value2 <- valueOf param2
   if predicate value1
     then modify' (\s -> s {iPointer = value2}) >> nextInstruction
     else nextInstructionWithStep 3
 
-computeValue :: Operator -> [Parameter] -> IntCodeProgram ()
-computeValue operator ~[param1, param2, param3] = do
+computeValue :: Operator -> (Parameter, Parameter, Parameter) -> IntCodeProgram ()
+computeValue operator (param1, param2, param3) = do
   value1 <- valueOf param1
   value2 <- valueOf param2
   resultP <- indexOf param3
@@ -145,28 +141,27 @@ padPmCodes pmCodes =
   where
     zeros = replicate 4 0
 
-runInstruction :: [Int] -> Int -> ([Parameter] -> IntCodeProgram ()) -> IntCodeProgram ()
-runInstruction pmCodes argsLen instruction = do
-  args <- gets takeArgs
-  params <- zip args <$> (padPmCodes pmCodes >>= mapM toParamMode)
-  instruction params
+getParams :: [Int] -> Int -> IntCodeProgram [Parameter]
+getParams pmCodes argsLen = gets (zip . takeArgs) <*> (padPmCodes pmCodes >>= mapM toParamMode)
   where
     takeArgs ProgramState {..} = map (memory !) $ take argsLen [iPointer + 1 ..]
 
 processInstruction :: Int -> IntCodeProgram ()
 processInstruction instr =
   case tokenize instr of
-    (3 :| pmCodes) -> runInstruction pmCodes 1 readInput
-    (4 :| pmCodes) -> runInstruction pmCodes 1 writeOutput
-    (9 :| pmCodes) -> runInstruction pmCodes 1 updateRelativeBase
-    (5 :| pmCodes) -> runInstruction pmCodes 2 $ jumpToPointerIf (/= 0)
-    (6 :| pmCodes) -> runInstruction pmCodes 2 $ jumpToPointerIf (== 0)
-    (1 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (+)
-    (2 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (*)
-    (7 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (assert (<))
-    (8 :| pmCodes) -> runInstruction pmCodes 3 $ computeValue (assert (==))
+    (3 :| pmCodes) -> getParams pmCodes 1 >>= mapM_ readInput
+    (4 :| pmCodes) -> getParams pmCodes 1 >>= mapM_ writeOutput
+    (9 :| pmCodes) -> getParams pmCodes 1 >>= mapM_ updateRelativeBase
+    (5 :| pmCodes) -> getParams pmCodes 2 >>= mapM_ (jumpToPointerIf (/= 0)) . toTuple
+    (6 :| pmCodes) -> getParams pmCodes 2 >>= mapM_ (jumpToPointerIf (== 0)) . toTuple
+    (1 :| pmCodes) -> getParams pmCodes 3 >>= mapM_ (computeValue (+)) . toTuple3
+    (2 :| pmCodes) -> getParams pmCodes 3 >>= mapM_ (computeValue (*)) . toTuple3
+    (7 :| pmCodes) -> getParams pmCodes 3 >>= mapM_ (computeValue (assert (<))) . toTuple3
+    (8 :| pmCodes) -> getParams pmCodes 3 >>= mapM_ (computeValue (assert (==))) . toTuple3
     _ -> illegalState "Unrecognized instruction code: " instr
   where
+    toTuple params = zip params (tail params)
+    toTuple3 params = zip3 params (tail params) (tail $ tail params)
     assert cmp lhs rhs
       | lhs `cmp` rhs = 1
       | otherwise = 0
@@ -192,8 +187,8 @@ runIntCodeProgram = execStateT nextInstruction
 newProgram :: [Int] -> ProgramState
 newProgram memory = ProgramState 0 False [] [] (fromList (zip [0 ..] memory)) 0 0
 
-programMemory :: ProgramState -> [Int]
-programMemory = elems . memory
+firstMemoryCell :: ProgramState -> Maybe Int
+firstMemoryCell = listToMaybe . elems . memory
 
 outputList :: ProgramState -> [Int]
 outputList = reverse . output

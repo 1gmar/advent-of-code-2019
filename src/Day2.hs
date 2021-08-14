@@ -16,11 +16,11 @@ replaceAt pos values list =
 runGravityAssistProgram :: [Int] -> Either String Int
 runGravityAssistProgram prog =
   case completedProgram of
-    Right (res : _) -> return res
+    Right (Just res) -> return res
     Left err -> throwError err
     _ -> throwError "Illegal program state!"
   where
-    completedProgram = programMemory <$> runIntCodeProgram (newProgram prog)
+    completedProgram = firstMemoryCell <$> runIntCodeProgram (newProgram prog)
 
 findInputPairFor :: Int -> [Int] -> Either String (Int, Int)
 findInputPairFor targetOutput prog =
