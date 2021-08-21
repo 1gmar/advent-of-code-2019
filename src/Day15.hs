@@ -53,7 +53,7 @@ neighbors droid@Droid {..} = map neighbor $ filter (/= backwards direction) (enu
 
 moveDroid :: Droid -> Either String Droid
 moveDroid droid@Droid {..} = do
-  movedState <- runIntCodeProgram state {input = [fromEnum direction]}
+  movedState <- runIntCodeProgram $ programWithInput state [fromEnum direction]
   let dest = toEnum $ result movedState
   return droid {state = movedState, destination = dest}
 

@@ -42,6 +42,7 @@ library:
     - vector
     - mtl
     - transformers
+    - hashable
     - unordered-containers
 
 executables:

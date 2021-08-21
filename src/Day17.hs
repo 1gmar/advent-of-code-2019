@@ -219,7 +219,7 @@ runVacuumRobot initState = do
   let view = (V.init . parseViewList . outputList) state
   fullPath <- findRobotPath <$> initRobot view
   abcPath <- reducePath fullPath
-  result <$> runIntCodeProgram state {input = movementRoutines abcPath}
+  result <$> runIntCodeProgram (programWithInput state $ movementRoutines abcPath)
   where
     movementRoutines ABCPath {..} = concatMap asciiCode [mainRoutine, routineA, routineB, routineC, "n"]
     asciiCode = map ord . (++ "\n")

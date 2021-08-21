@@ -31,13 +31,13 @@ loopOver :: [Amplifier] -> ProgramResult
 loopOver [] = Left "Missing amplifier chain."
 loopOver [_] = Left "Illegal amplifier setup."
 loopOver (current@(Amplifier code state) : next@Amplifier {..} : rest)
-  | code == 'E' && terminated state = Right state
-  | code == 'A' && iPointer state == 0 = runIntCodeProgram (inSignal 0 state) >>= chainResult current
+  | code == 'E' && isTerminated state = Right state
+  | code == 'A' && instrPointer state == 0 = runIntCodeProgram (inSignal 0 state) >>= chainResult current
   | otherwise = runIntCodeProgram state >>= chainResult current
   where
     chainResult amp nextState = loopOver (setupNext (result nextState) : rest ++ [amp {softState = nextState}])
     setupNext res = next {softState = inSignal res softState}
-    inSignal signal nextState = nextState {input = input nextState ++ [signal]}
+    inSignal signal nextState = programWithInput nextState (inputList nextState ++ [signal])
 
 findMaxPossibleSignal :: AmpChainRunner -> [[Int]] -> [Int] -> ProgramResult
 findMaxPossibleSignal runner allPhaseSeq = fmap (maximumBy compareStates) . for allPhaseSeq . runner

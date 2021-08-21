@@ -76,10 +76,10 @@ moveRobot robot@(Robot pan@(Panel (x, y) _) dir _ _) =
 
 paintShip :: Robot -> Either String Robot
 paintShip robot@Robot {..}
-  | terminated state = return robot
+  | isTerminated state = return robot
   | otherwise = do
     let color = fromEnum $ currentColor robot
-    interruptedState <- runIntCodeProgram state {input = [color]}
+    interruptedState <- runIntCodeProgram $ programWithInput state [color]
     (nextColor, nextDirection) <- extractOutput $ outputList interruptedState
     brushRobot <- paintCurrentPanel robot nextColor
     rotatedRobot <- rotateRobot brushRobot nextDirection

@@ -87,12 +87,12 @@ choosePaddleCmd Game {..} =
 
 playGame :: Game -> GameResult
 playGame game@(Game currentState _ _)
-  | terminated currentState = return game
+  | isTerminated currentState = return game
   | otherwise = do
     nextGame <- buildGameGrid game
     paddleCmd <- choosePaddleCmd nextGame
     let nextState = programWithOutput (state nextGame) []
-    playGame (nextGame {state = nextState {input = [paddleCmd]}})
+    playGame (nextGame {state = programWithInput nextState [paddleCmd]})
 
 startFreeGame :: [Int] -> Game
 startFreeGame prog = Game (newProgram (2 : drop 1 prog)) 0 []
